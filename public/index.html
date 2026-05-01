@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CordisTube</title>
+    <style>
+        :root { --yt-main-bg: #0f0f0f; --yt-surface: #0f0f0f; --yt-text: #ffffff; --yt-text-secondary: #aaaaaa; --yt-border: #333; --yt-hover: #272727; }
+        body { font-family: "Roboto", "Arial", sans-serif; margin: 0; background: var(--yt-main-bg); color: var(--yt-text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; padding: 0 16px; height: 56px; background: var(--yt-surface); position: sticky; top: 0; z-index: 100; }
+        .header-left { display: flex; align-items: center; gap: 16px; font-weight: bold; font-size: 20px; cursor: pointer; }
+        .header-center { flex-grow: 1; display: flex; justify-content: center; max-width: 720px; }
+        .search-container { display: flex; width: 100%; max-width: 600px; height: 40px; }
+        #search-input { width: 100%; padding: 0 16px; border-radius: 40px 0 0 40px; border: 1px solid var(--yt-border); background: #121212; color: white; outline: none; font-size: 16px; }
+        #search-input:focus { border-color: #065fd4; box-shadow: inset 0 1px 2px rgba(0,0,0,0.3); }
+        .search-btn { width: 64px; background: #222; border: 1px solid var(--yt-border); border-left: none; border-radius: 0 40px 40px 0; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; }
+        
+        .main-layout { display: flex; flex-grow: 1; overflow: hidden; }
+        .sidebar { width: 240px; padding: 12px; overflow-y: auto; background: var(--yt-surface); flex-shrink: 0; }
+        .sidebar-item { display: flex; align-items: center; gap: 24px; padding: 0 12px; height: 40px; border-radius: 10px; cursor: pointer; font-size: 14px; }
+        .sidebar-item:hover { background: var(--yt-hover); }
+        .sidebar-item.active { background: var(--yt-hover); font-weight: 500; }
+        
+        #page-container { flex-grow: 1; overflow-y: auto; padding-top: 12px; }
+        #history-list { padding: 0 24px 12px 24px; display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; }
+        .history-item { cursor: pointer; white-space: nowrap; background: var(--yt-hover); padding: 6px 12px; border-radius: 8px; font-size: 14px; }
+
+        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; padding: 0 24px 24px 24px; }
+        .video-card { cursor: pointer; display: flex; flex-direction: column; gap: 12px; }
+        .thumbnail-container { position: relative; width: 100%; aspect-ratio: 16/9; }
+        .thumbnail-container img { width: 100%; height: 100%; border-radius: 12px; object-fit: cover; background: #222; }
+        .duration { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); padding: 2px 4px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+        
+        .video-details { display: flex; gap: 12px; }
+        .channel-avatar { width: 36px; height: 36px; border-radius: 50%; background: #333; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+        .video-meta { display: flex; flex-direction: column; }
+        .video-title { font-size: 16px; font-weight: 500; line-height: 22px; color: var(--yt-text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 4px; }
+        .channel-name, .video-stats { font-size: 14px; color: var(--yt-text-secondary); text-decoration: none; }
+        .channel-name:hover { color: var(--yt-text); }
+
+        .channel-header { padding: 40px 20px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 24px; max-width: 1200px; margin: 0 auto; }
+        .channel-header img { border-radius: 50%; width: 120px; height: 120px; background: #222; }
+        .tabs { display: flex; gap: 30px; padding: 0 20px; border-bottom: 1px solid #333; margin-bottom: 10px; }
+        .tab { cursor: pointer; padding: 15px 0; font-weight: 500; color: #aaa; position: relative; }
+        .tab.active { color: white; border-bottom: 2px solid white; }
+        
+        .video-card.short .thumbnail-container { aspect-ratio: 9/16; max-width: 210px; margin: 0 auto; }
+        .shorts-container { display: flex; flex-direction: column; align-items: center; gap: 30px; padding: 20px; }
+        .short-player { width: 400px; height: calc(400px * 16 / 9); background: black; border-radius: 15px; overflow: hidden; position: relative; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+
+        button { background: #272727; color: white; border: none; padding: 8px 15px; border-radius: 18px; cursor: pointer; font-weight: 500; }
+        button:hover { background: #3f3f3f; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left" onclick="loadTrending()">
+            <span style="color:#ff0000; font-size: 24px;">▶</span> CordisTube!
+        </div>
+        <div class="header-center">
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Search">
+                <button class="search-btn" onclick="handleSearch()">🔍</button>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="channel-avatar" style="background: #065fd4;">U</div>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <div class="sidebar">
+            <div class="sidebar-item active" onclick="loadTrending()">🏠 Home</div>
+            <div class="sidebar-item" onclick="loadShorts()">📱 Shorts (very buggy!)</div>
+            <div class="sidebar-item">📺 Subscriptions (not yet here)</div>
+            <hr style="border: 0.5px solid var(--yt-border); margin: 12px 0;">
+            <div class="sidebar-item" onclick="loadHistoryPage()">🕒 History</div>
+            <div class="sidebar-item"> playlists (not yet)</div>
+        </div>
+        
+        <div id="page-container">
+            <div id="history-list"></div>
+            <div id="content"></div>
+        </div>
+    </div>
+
+    <script>
+        const content = document.getElementById('content');
+        const searchInput = document.getElementById('search-input');
+
+        async function fetchAPI(url) {
+            const res = await fetch(url);
+            return res.json();
+        }
+
+        function setActiveSidebar(el) {
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.innerText.includes(el)) item.classList.add('active');
+            });
+        }
+
+        async function loadHistory() {
+            const history = await fetchAPI('/api/history');
+            const list = document.getElementById('history-list');
+            if (history.length === 0) { list.style.display = 'none'; return; }
+            list.style.display = 'flex';
+            list.innerHTML = history.map(h => `<div class="history-item" onclick="searchInput.value='${h}'; handleSearch()">${h}</div>`).join('');
+        }
+
+        function renderVideos(videos) {
+            content.innerHTML = `<div class="video-grid">
+                ${videos.map(v => `
+                    <div class="video-card ${v.isShort ? 'short' : ''}" onclick="${v.isShort ? `playShort('${v.id}')` : `playVideo('${v.id}')`}" title="${v.title}">
+                        <div class="thumbnail-container">
+                            <img src="${v.thumbnail}" loading="lazy">
+                            ${v.duration !== 'N/A' ? `<div class="duration">${v.duration}</div>` : ''}
+                        </div>
+                        <div class="video-details">
+                            <div class="channel-avatar" onclick="event.stopPropagation(); viewChannel('${v.authorId}')">${(v.author || '?')[0]}</div>
+                            <div class="video-meta">
+                                <div class="video-title">${v.title}</div>
+                                <div class="channel-name" onclick="event.stopPropagation(); viewChannel('${v.authorId}')">${v.author}</div>
+                                <div class="video-stats">${v.isShort ? 'Short' : 'Video'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+
+        async function loadHistoryPage() {
+            setActiveSidebar('History');
+            content.innerHTML = '<h2 style="padding:20px">Watch History</h2>';
+            const videos = await fetchAPI('/api/history/videos');
+            if (videos.length === 0) {
+                content.innerHTML += '<p style="padding:20px">No videos watched yet.</p>';
+                return;
+            }
+            const grid = document.createElement('div');
+            content.appendChild(grid);
+            grid.outerHTML = renderVideosHTML(videos);
+        }
+
+        function renderVideosHTML(videos) {
+            return `<div class="video-grid">
+                ${videos.map(v => `
+                    <div class="video-card ${v.isShort ? 'short' : ''}" onclick="${v.isShort ? `playShort('${JSON.stringify(v).replace(/'/g, "\\'").replace(/"/g, '&quot;')}')` : `playVideo('${JSON.stringify(v).replace(/'/g, "\\'").replace(/"/g, '&quot;')}')`}" title="${v.title}">
+                        <div class="thumbnail-container">
+                            <img src="${v.thumbnail}" loading="lazy">
+                            ${v.duration !== 'N/A' ? `<div class="duration">${v.duration}</div>` : ''}
+                        </div>
+                        <div class="video-details">
+                            <div class="channel-avatar" onclick="event.stopPropagation(); viewChannel('${v.authorId}')">${(v.author || '?')[0]}</div>
+                            <div class="video-meta">
+                                <div class="video-title">${v.title}</div>
+                                <div class="channel-name" onclick="event.stopPropagation(); viewChannel('${v.authorId}')">${v.author}</div>
+                                <div class="video-stats">${v.isShort ? 'Short' : 'Video'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+
+        function renderVideos(videos) {
+            content.innerHTML = renderVideosHTML(videos);
+        }
+
+        async function handleSearch() {
+            const q = searchInput.value;
+            if (!q) return;
+            content.innerHTML = '<p style="padding:20px">Searching...</p>';
+            const videos = await fetchAPI(`/api/search?q=${encodeURIComponent(q)}`);
+            renderVideos(videos);
+            loadHistory();
+        }
+
+        async function loadTrending() {
+            setActiveSidebar('Home');
+            content.innerHTML = '<p style="padding:20px">Loading trending...</p>';
+            const videos = await fetchAPI('/api/trending');
+            renderVideos(videos);
+            loadHistory();
+        }
+
+        async function loadShorts() {
+            setActiveSidebar('Shorts');
+            content.innerHTML = '<p style="padding:20px">Loading shorts...</p>';
+            const shorts = await fetchAPI('/api/shorts');
+            if (!Array.isArray(shorts)) {
+                content.innerHTML = '<p style="padding:20px">No shorts available at the moment.</p>';
+                return;
+            }
+            if (shorts.length === 0) {
+                content.innerHTML = '<p style="padding:20px">No shorts available.</p>';
+                return;
+            }
+            content.innerHTML = `<div class="shorts-container">
+                ${shorts.map(s => `
+                    <div class="short-player">
+                        <video src="/api/proxy/${s.id}" controls loop></video>
+                        <div style="position:absolute; bottom:20px; left:20px; text-shadow: 1px 1px 2px black;">
+                            <h3>${s.title}</h3>
+                            <button onclick="viewChannel('${s.authorId}')">${s.author}</button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+
+        async function viewChannel(id) {
+            if (!id) return;
+            content.innerHTML = '<p style="padding:20px">Loading channel...</p>';
+            const data = await fetchAPI(`/api/channel/${id}`);
+            renderChannel(id, data);
+        }
+
+        function renderChannel(id, data) {
+            content.innerHTML = `
+                <div class="channel-header">
+                    <img src="${data.thumbnail}">
+                    <div>
+                        <h1 style="margin:0">${data.title}</h1>
+                        <p style="color:#aaa">${data.subscribers || 'No subscribers'}</p>
+                    </div>
+                </div>
+                <div class="tabs">
+                    <div id="tab-videos" class="tab active" onclick="switchChannelTab('${id}', 'videos')">Videos</div>
+                    <div id="tab-shorts" class="tab" onclick="switchChannelTab('${id}', 'shorts')">Shorts</div>
+                </div>
+                <div id="channel-content"></div>
+            `;
+            renderChannelGrid(data.videos);
+        }
+
+        function renderChannelGrid(videos) {
+            const target = document.getElementById('channel-content');
+            if (!Array.isArray(videos)) {
+                target.innerHTML = '<p style="padding:20px">No content found.</p>';
+                return;
+            }
+            target.innerHTML = renderVideosHTML(videos);
+        }
+
+        async function switchChannelTab(id, type) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${type}`).classList.add('active');
+            
+            const videos = type === 'videos' 
+                ? (await fetchAPI(`/api/channel/${id}`)).videos 
+                : await fetchAPI(`/api/channel/${id}/shorts`);
+            
+            renderChannelGrid(videos);
+        }
+
+        async function recordHistory(video) {
+            await fetch('/api/history/watch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: typeof video === 'string' ? video : JSON.stringify(video)
+            });
+        }
+
+        function playVideo(videoData) {
+            const v = typeof videoData === 'string' ? JSON.parse(videoData) : videoData;
+            recordHistory(v);
+            content.innerHTML = `<div style="padding:20px; max-width: 1000px; margin: 0 auto;">
+                <video src="/api/proxy/${v.id}" controls autoplay style="width:100%; border-radius: 12px;"></video>
+                <h2>${v.title}</h2>
+                <p>${v.author}</p>
+                <br><br>
+                <button onclick="loadTrending()">Back to Home</button>
+            </div>`;
+        }
+
+        function playShort(videoData) {
+            const v = typeof videoData === 'string' ? JSON.parse(videoData) : videoData;
+            recordHistory(v);
+            content.innerHTML = `<div class="shorts-container">
+                <div class="short-player">
+                    <video src="/api/proxy/${v.id}" controls autoplay loop></video>
+                </div>
+                <button onclick="loadTrending()">Back to Home</button>
+            </div>`;
+        }
+
+        searchInput.addEventListener('keypress', e => e.key === 'Enter' && handleSearch());
+        loadTrending();
+    </script>
+</body>
+</html>

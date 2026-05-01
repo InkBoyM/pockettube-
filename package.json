@@ -1,0 +1,19 @@
+{
+  "name": "yt-app",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Lightweight YouTube app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@fastify/static": "^7.0.0",
+    "fastify": "^4.26.0",
+    "quickjs-emscripten": "^0.32.0",
+    "youtubei.js": "^17.0.1"
+  }
+}
