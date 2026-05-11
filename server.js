@@ -1,19 +1,21 @@
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { Innertube, Platform } from 'youtubei.js';
+import vm from 'vm';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fastify = Fastify({ logger: true });
 
-// Platform eval shim (required for youtubei.js in Node)
+// Use Node's built-in vm module instead of new Function()
 Platform.shim.eval = async (data, env) => {
   const properties = [];
   if (env.n) properties.push(`n: exportedVars.nFunction("${env.n}")`);
   if (env.sig) properties.push(`sig: exportedVars.sigFunction("${env.sig}")`);
   const code = `${data.output}\nreturn { ${properties.join(', ')} }`;
-  return new Function(code)();
+  const script = new vm.Script(`(function() { ${code} })()`);
+  return script.runInNewContext({});
 };
 
 // Initialize Innertube once
