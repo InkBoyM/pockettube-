@@ -1,294 +1,2100 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="html-root">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CordisTube</title>
-    <style>
-        :root { --yt-main-bg: #0f0f0f; --yt-surface: #0f0f0f; --yt-text: #ffffff; --yt-text-secondary: #aaaaaa; --yt-border: #333; --yt-hover: #272727; }
-        body { font-family: "Roboto", "Arial", sans-serif; margin: 0; background: var(--yt-main-bg); color: var(--yt-text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
-        header { display: flex; justify-content: space-between; align-items: center; padding: 0 16px; height: 56px; background: var(--yt-surface); position: sticky; top: 0; z-index: 100; }
-        .header-left { display: flex; align-items: center; gap: 16px; font-weight: bold; font-size: 20px; cursor: pointer; }
-        .header-center { flex-grow: 1; display: flex; justify-content: center; max-width: 720px; }
-        .search-container { display: flex; width: 100%; max-width: 600px; height: 40px; }
-        #search-input { width: 100%; padding: 0 16px; border-radius: 40px 0 0 40px; border: 1px solid var(--yt-border); background: #121212; color: white; outline: none; font-size: 16px; }
-        #search-input:focus { border-color: #065fd4; box-shadow: inset 0 1px 2px rgba(0,0,0,0.3); }
-        .search-btn { width: 64px; background: #222; border: 1px solid var(--yt-border); border-left: none; border-radius: 0 40px 40px 0; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; }
-        
-        .main-layout { display: flex; flex-grow: 1; overflow: hidden; }
-        .sidebar { width: 240px; padding: 12px; overflow-y: auto; background: var(--yt-surface); flex-shrink: 0; }
-        .sidebar-item { display: flex; align-items: center; gap: 24px; padding: 0 12px; height: 40px; border-radius: 10px; cursor: pointer; font-size: 14px; }
-        .sidebar-item:hover { background: var(--yt-hover); }
-        .sidebar-item.active { background: var(--yt-hover); font-weight: 500; }
-        
-        #page-container { flex-grow: 1; overflow-y: auto; padding-top: 12px; }
-        #history-list { padding: 0 24px 12px 24px; display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; }
-        .history-item { cursor: pointer; white-space: nowrap; background: var(--yt-hover); padding: 6px 12px; border-radius: 8px; font-size: 14px; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" id="theme-color-meta" content="#0f0f0f">
+  <title>CordisTube</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════
+       CSS VARIABLES — Dark mode (default)
+    ═══════════════════════════════════════════ */
+    :root {
+      --bg:          #0f0f0f;
+      --bg2:         #161616;
+      --bg3:         #1e1e1e;
+      --bg4:         #272727;
+      --bg-hover:    #2e2e2e;
+      --text:        #f1f1f1;
+      --text2:       #aaaaaa;
+      --text3:       #666666;
+      --accent:      #ff4444;
+      --accent-h:    #ff6666;
+      --border:      #2a2a2a;
+      --shadow:      0 2px 8px rgba(0,0,0,0.55);
+      --shadow-lg:   0 8px 32px rgba(0,0,0,0.65);
+      --radius:      12px;
+      --radius-sm:   8px;
+      --radius-xs:   6px;
+      --radius-full: 9999px;
+      --ease:        0.18s ease;
+      --sidebar-w:   224px;
+      --header-h:    56px;
+      --player-bar-h:80px;
+    }
 
-        .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; padding: 0 24px 24px 24px; }
-        .video-card { cursor: pointer; display: flex; flex-direction: column; gap: 12px; }
-        .thumbnail-container { position: relative; width: 100%; aspect-ratio: 16/9; }
-        .thumbnail-container img { width: 100%; height: 100%; border-radius: 12px; object-fit: cover; background: #222; }
-        .duration { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); padding: 2px 4px; border-radius: 4px; font-size: 12px; font-weight: 500; }
-        
-        .video-details { display: flex; gap: 12px; }
-        .channel-avatar { width: 36px; height: 36px; border-radius: 50%; background: #333; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
-        .video-meta { display: flex; flex-direction: column; }
-        .video-title { font-size: 16px; font-weight: 500; line-height: 22px; color: var(--yt-text); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 4px; }
-        .channel-name, .video-stats { font-size: 14px; color: var(--yt-text-secondary); text-decoration: none; }
-        .channel-name:hover { color: var(--yt-text); }
+    /* ─── Light Mode ─── */
+    .light-mode {
+      --bg:        #ffffff;
+      --bg2:       #f7f7f7;
+      --bg3:       #efefef;
+      --bg4:       #e5e5e5;
+      --bg-hover:  #dcdcdc;
+      --text:      #0f0f0f;
+      --text2:     #606060;
+      --text3:     #999999;
+      --border:    #e0e0e0;
+      --shadow:    0 2px 8px rgba(0,0,0,0.10);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.14);
+    }
 
-        .channel-header { padding: 40px 20px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 24px; max-width: 1200px; margin: 0 auto; }
-        .channel-header img { border-radius: 50%; width: 120px; height: 120px; background: #222; }
-        .tabs { display: flex; gap: 30px; padding: 0 20px; border-bottom: 1px solid #333; margin-bottom: 10px; }
-        .tab { cursor: pointer; padding: 15px 0; font-weight: 500; color: #aaa; position: relative; }
-        .tab.active { color: white; border-bottom: 2px solid white; }
-        
-        .video-card.short .thumbnail-container { aspect-ratio: 9/16; max-width: 210px; margin: 0 auto; }
-        .shorts-container { display: flex; flex-direction: column; align-items: center; gap: 30px; padding: 20px; }
-        .short-player { width: 400px; height: calc(400px * 16 / 9); background: black; border-radius: 15px; overflow: hidden; position: relative; }
-        video { width: 100%; height: 100%; object-fit: cover; }
+    /* ─── Music Mode accent override ─── */
+    .music-mode {
+      --accent:   #1DB954;
+      --accent-h: #1ed760;
+    }
 
-        button { background: #272727; color: white; border: none; padding: 8px 15px; border-radius: 18px; cursor: pointer; font-weight: 500; }
-        button:hover { background: #3f3f3f; }
-    </style>
+    /* ═══════════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      transition: background var(--ease), color var(--ease);
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button { cursor: pointer; border: none; background: none; color: inherit; font: inherit; }
+    img { display: block; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ═══════════════════════════════════════════
+       HEADER
+    ═══════════════════════════════════════════ */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 16px;
+      height: var(--header-h);
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      flex-shrink: 0;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      letter-spacing: -0.3px;
+    }
+    .logo-icon { color: var(--accent); font-size: 20px; line-height: 1; }
+
+    .header-search {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      max-width: 580px;
+    }
+    .search-row { display: flex; width: 100%; }
+
+    .search-input {
+      flex: 1;
+      padding: 0 16px;
+      height: 38px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-right: none;
+      border-radius: var(--radius-full) 0 0 var(--radius-full);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color var(--ease), background var(--ease);
+    }
+    .search-input:focus { border-color: var(--accent); background: var(--bg); }
+    .search-input::placeholder { color: var(--text3); }
+
+    .search-btn {
+      height: 38px;
+      padding: 0 18px;
+      background: var(--bg4);
+      border: 1px solid var(--border);
+      border-radius: 0 var(--radius-full) var(--radius-full) 0;
+      color: var(--text2);
+      font-size: 15px;
+      transition: background var(--ease), color var(--ease);
+    }
+    .search-btn:hover { background: var(--bg-hover); color: var(--text); }
+
+    .header-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--text2);
+      transition: background var(--ease), color var(--ease);
+    }
+    .icon-btn:hover { background: var(--bg-hover); color: var(--text); }
+
+    /* ═══════════════════════════════════════════
+       LAYOUT
+    ═══════════════════════════════════════════ */
+    .main-layout { display: flex; flex: 1; overflow: hidden; }
+
+    /* ═══════════════════════════════════════════
+       SIDEBAR
+    ═══════════════════════════════════════════ */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      flex-shrink: 0;
+      padding: 8px 0;
+      display: flex;
+      flex-direction: column;
+      scrollbar-width: thin;
+      scrollbar-color: var(--bg4) transparent;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 9px 16px;
+      margin: 1px 8px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text2);
+      transition: background var(--ease), color var(--ease);
+    }
+    .sidebar-item:hover { background: var(--bg-hover); color: var(--text); }
+    .sidebar-item.active { background: var(--bg4); color: var(--text); }
+    .sidebar-icon { width: 18px; text-align: center; font-size: 15px; flex-shrink: 0; }
+
+    .sidebar-divider { border: none; border-top: 1px solid var(--border); margin: 8px 16px; }
+
+    .sidebar-section-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 8px 16px 4px;
+    }
+
+    .sidebar-pl-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 16px;
+      margin: 1px 8px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text2);
+      transition: background var(--ease), color var(--ease);
+    }
+    .sidebar-pl-item:hover { background: var(--bg-hover); color: var(--text); }
+    .sidebar-pl-item.active { background: var(--bg4); color: var(--text); }
+
+    .pl-mini-thumb {
+      width: 30px;
+      height: 30px;
+      border-radius: var(--radius-xs);
+      background: var(--bg4);
+      object-fit: cover;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      overflow: hidden;
+    }
+    .pl-mini-name {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .new-pl-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 16px;
+      margin: 1px 8px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text3);
+      transition: background var(--ease), color var(--ease);
+    }
+    .new-pl-btn:hover { background: var(--bg-hover); color: var(--text); }
+
+    /* ═══════════════════════════════════════════
+       PAGE CONTAINER
+    ═══════════════════════════════════════════ */
+    #page-container {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: calc(var(--player-bar-h) + 20px);
+      scrollbar-width: thin;
+      scrollbar-color: var(--bg4) transparent;
+    }
+
+    /* ═══════════════════════════════════════════
+       SEARCH HISTORY BAR
+    ═══════════════════════════════════════════ */
+    #history-bar {
+      display: flex;
+      gap: 8px;
+      padding: 12px 24px 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex-wrap: nowrap;
+    }
+    #history-bar::-webkit-scrollbar { display: none; }
+
+    .h-chip {
+      cursor: pointer;
+      white-space: nowrap;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      color: var(--text2);
+      flex-shrink: 0;
+      transition: background var(--ease), color var(--ease);
+    }
+    .h-chip:hover { background: var(--bg-hover); color: var(--text); }
+
+    /* ═══════════════════════════════════════════
+       VIDEO GRID
+    ═══════════════════════════════════════════ */
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      padding: 16px 24px 24px;
+    }
+
+    /* Music mode: single column list */
+    .music-mode .video-grid {
+      grid-template-columns: 1fr;
+      gap: 2px;
+      padding: 8px 16px;
+    }
+
+    /* ═══════════════════════════════════════════
+       VIDEO CARD
+    ═══════════════════════════════════════════ */
+    .video-card {
+      cursor: pointer;
+      border-radius: var(--radius);
+      position: relative;
+      transition: transform var(--ease);
+    }
+    .video-card:hover { transform: translateY(-2px); }
+
+    /* Thumbnail */
+    .thumb-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--bg3);
+    }
+    .thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    .video-card:hover .thumb-wrap img { transform: scale(1.04); }
+
+    .duration-pill {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      background: rgba(0,0,0,0.82);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 5px;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    /* 3-dots button — absolutely positioned over card */
+    .dots-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 2;
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-full);
+      background: rgba(0,0,0,0.72);
+      color: #fff;
+      font-size: 17px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity var(--ease), background var(--ease);
+      line-height: 1;
+    }
+    .video-card:hover .dots-btn { opacity: 1; }
+    .dots-btn:hover { background: rgba(0,0,0,0.92); }
+
+    /* Card body */
+    .card-body {
+      display: flex;
+      gap: 10px;
+      padding: 10px 2px 4px;
+      align-items: flex-start;
+    }
+
+    .ch-avatar-sm {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-full);
+      background: var(--bg4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: opacity var(--ease);
+    }
+    .ch-avatar-sm:hover { opacity: 0.75; }
+
+    .card-text { flex: 1; min-width: 0; padding-right: 20px; }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.45;
+      color: var(--text);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 3px;
+    }
+
+    .card-channel {
+      font-size: 12px;
+      color: var(--text2);
+      cursor: pointer;
+      transition: color var(--ease);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-channel:hover { color: var(--text); }
+
+    /* ─── Music mode card overrides ─── */
+    .music-mode .video-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      border-radius: var(--radius-sm);
+    }
+    .music-mode .video-card:hover {
+      background: var(--bg3);
+      transform: none;
+    }
+    .music-mode .thumb-wrap {
+      width: 52px;
+      height: 52px;
+      aspect-ratio: 1 / 1;
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+    }
+    .music-mode .thumb-wrap img { transform: none !important; }
+    .music-mode .duration-pill { display: none; }
+    .music-mode .card-body { padding: 0; flex: 1; min-width: 0; }
+    .music-mode .ch-avatar-sm { display: none; }
+    .music-mode .card-text { padding-right: 32px; }
+    .music-mode .card-title { -webkit-line-clamp: 1; font-size: 14px; }
+    .music-mode .dots-btn {
+      top: 50%;
+      right: 8px;
+      transform: translateY(-50%);
+      opacity: 1;
+      background: transparent;
+      color: var(--text3);
+    }
+    .music-mode .dots-btn:hover { background: var(--bg-hover); color: var(--text); }
+
+    /* ═══════════════════════════════════════════
+       SECTION HEADINGS
+    ═══════════════════════════════════════════ */
+    .sec-heading {
+      font-size: 17px;
+      font-weight: 600;
+      padding: 20px 24px 6px;
+      letter-spacing: -0.2px;
+    }
+    .sec-sub {
+      font-size: 12px;
+      color: var(--text2);
+      padding: 0 24px 8px;
+    }
+
+    /* ═══════════════════════════════════════════
+       VIDEO PLAYER
+    ═══════════════════════════════════════════ */
+    .player-wrap {
+      padding: 20px 24px;
+      max-width: 960px;
+    }
+
+    .player-video {
+      width: 100%;
+      border-radius: var(--radius);
+      background: #000;
+      max-height: 520px;
+      display: block;
+    }
+
+    .player-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .action-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      transition: background var(--ease), border-color var(--ease);
+    }
+    .action-pill:hover { background: var(--bg-hover); }
+    .action-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .action-pill:disabled { opacity: 0.45; cursor: default; }
+
+    .player-title {
+      font-size: 19px;
+      font-weight: 600;
+      margin: 14px 0 6px;
+      letter-spacing: -0.2px;
+      line-height: 1.35;
+    }
+
+    .player-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+
+    .player-channel {
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text2);
+      transition: color var(--ease);
+    }
+    .player-channel:hover { color: var(--text); }
+
+    .player-views { font-size: 12px; color: var(--text3); }
+
+    .player-desc {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.65;
+      max-height: 72px;
+      overflow: hidden;
+      position: relative;
+      transition: max-height 0.3s ease;
+      white-space: pre-line;
+    }
+    .player-desc.expanded { max-height: 600px; }
+    .show-more { font-size: 12px; font-weight: 600; color: var(--text); cursor: pointer; margin-top: 4px; }
+
+    /* ═══════════════════════════════════════════
+       CHANNEL PAGE
+    ═══════════════════════════════════════════ */
+    .ch-banner {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+    }
+    .ch-banner-placeholder {
+      width: 100%;
+      height: 160px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    }
+
+    .ch-info-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+      padding: 0 24px 16px;
+      margin-top: -36px;
+    }
+
+    .ch-avatar-lg {
+      width: 80px;
+      height: 80px;
+      border-radius: var(--radius-full);
+      border: 3px solid var(--bg);
+      background: var(--bg3);
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+
+    .ch-details { flex: 1; padding-bottom: 4px; }
+    .ch-name { font-size: 21px; font-weight: 700; letter-spacing: -0.3px; }
+    .ch-stats { font-size: 12px; color: var(--text2); margin-top: 3px; }
+
+    .ch-desc-area { padding: 0 24px 16px; max-width: 680px; font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+    .ch-tabs {
+      display: flex;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4px;
+    }
+    .ch-tab {
+      padding: 11px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text3);
+      cursor: pointer;
+      position: relative;
+      transition: color var(--ease);
+    }
+    .ch-tab:hover { color: var(--text); }
+    .ch-tab.active { color: var(--text); }
+    .ch-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 0; right: 0;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+    }
+
+    /* ═══════════════════════════════════════════
+       PLAYLIST PAGE
+    ═══════════════════════════════════════════ */
+    .pl-page-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      padding: 24px 24px 16px;
+    }
+
+    .pl-cover {
+      width: 130px;
+      height: 88px;
+      border-radius: var(--radius);
+      background: var(--bg3);
+      object-fit: cover;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+    }
+
+    .pl-page-info { flex: 1; }
+    .pl-page-name { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px; }
+    .pl-page-count { font-size: 12px; color: var(--text2); margin-bottom: 12px; }
+    .pl-page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .pl-list { padding: 4px 12px 24px; }
+
+    .pl-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 8px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background var(--ease);
+    }
+    .pl-row:hover { background: var(--bg3); }
+    .pl-row-num { width: 22px; text-align: center; font-size: 12px; color: var(--text3); flex-shrink: 0; }
+    .pl-row-thumb { width: 112px; height: 64px; border-radius: var(--radius-sm); object-fit: cover; background: var(--bg3); flex-shrink: 0; }
+    .pl-row-info { flex: 1; min-width: 0; }
+    .pl-row-title { font-size: 13px; font-weight: 500; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; margin-bottom: 4px; }
+    .pl-row-meta { font-size: 11px; color: var(--text3); }
+    .pl-row-dots { width: 28px; height: 28px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 16px; transition: background var(--ease), color var(--ease); }
+    .pl-row-dots:hover { background: var(--bg-hover); color: var(--text); }
+
+    /* ═══════════════════════════════════════════
+       MUSIC PLAYER BAR
+    ═══════════════════════════════════════════ */
+    #music-player {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: var(--player-bar-h);
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.45);
+    }
+    #music-player.hidden { display: none; }
+
+    .mp-progress-wrap {
+      height: 3px;
+      background: var(--bg4);
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+      transition: height 0.15s;
+    }
+    .mp-progress-wrap:hover { height: 5px; }
+    .mp-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.5s linear;
+      pointer-events: none;
+    }
+
+    .mp-bar {
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      flex: 1;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .mp-track { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+    .mp-thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      background: var(--bg4);
+      flex-shrink: 0;
+    }
+    .mp-text { min-width: 0; }
+    .mp-title { font-size: 13px; font-weight: 500; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .mp-artist { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+    .mp-controls { display: flex; align-items: center; gap: 6px; }
+
+    .ctrl-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: var(--text2);
+      transition: background var(--ease), color var(--ease);
+    }
+    .ctrl-btn:hover { background: var(--bg-hover); color: var(--text); }
+    .ctrl-btn.play-pause {
+      width: 38px;
+      height: 38px;
+      background: var(--text);
+      color: var(--bg);
+      font-size: 17px;
+    }
+    .ctrl-btn.play-pause:hover { opacity: 0.85; background: var(--text); }
+
+    .mp-extras { display: flex; align-items: center; gap: 2px; }
+
+    /* ═══════════════════════════════════════════
+       CONTEXT MENU (3-dots)
+    ═══════════════════════════════════════════ */
+    #ctx-menu {
+      position: fixed;
+      z-index: 600;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-lg);
+      min-width: 170px;
+      overflow: hidden;
+      animation: fadeIn 0.12s ease;
+    }
+    #ctx-menu.hidden { display: none; }
+
+    .ctx-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background var(--ease);
+    }
+    .ctx-item:hover { background: var(--bg-hover); }
+    .ctx-icon { width: 16px; text-align: center; }
+
+    /* ═══════════════════════════════════════════
+       SETTINGS PANEL
+    ═══════════════════════════════════════════ */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.52);
+      z-index: 400;
+      animation: fadeIn 0.18s ease;
+    }
+    .overlay.hidden { display: none; }
+
+    .settings-panel {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: 320px;
+      background: var(--bg2);
+      border-left: 1px solid var(--border);
+      z-index: 401;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      animation: slideInRight 0.22s ease;
+    }
+    .settings-panel.hidden { display: none; }
+
+    .sp-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 15px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .sp-group { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .sp-group-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .sp-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
+    .sp-label { display: flex; align-items: center; gap: 10px; }
+    .sp-icon { font-size: 17px; width: 22px; text-align: center; }
+    .sp-name { font-size: 13px; font-weight: 500; }
+    .sp-desc { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+    /* Toggle switch */
+    .toggle { position: relative; display: inline-block; width: 42px; height: 23px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--bg4);
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      transition: background var(--ease);
+    }
+    .toggle input:checked + .toggle-track { background: var(--accent); }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      width: 17px;
+      height: 17px;
+      background: #fff;
+      border-radius: 50%;
+      top: 3px;
+      left: 3px;
+      transition: left var(--ease);
+    }
+    .toggle input:checked + .toggle-track::after { left: 22px; }
+
+    .install-btn {
+      width: 100%;
+      padding: 9px 16px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 10px;
+      text-align: center;
+      transition: background var(--ease);
+    }
+    .install-btn:hover:not(:disabled) { background: var(--accent-h); }
+    .install-btn:disabled { background: var(--bg4); color: var(--text3); cursor: default; }
+
+    /* ═══════════════════════════════════════════
+       PLAYLIST MODAL
+    ═══════════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.58);
+      z-index: 450;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.18s ease;
+    }
+    .modal-overlay.hidden { display: none; }
+
+    .modal-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 360px;
+      max-width: 95vw;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-lg);
+      animation: scaleIn 0.18s ease;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .modal-body { overflow-y: auto; flex: 1; }
+    .modal-footer { padding: 12px 18px; border-top: 1px solid var(--border); flex-shrink: 0; }
+
+    .pl-modal-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 18px;
+      cursor: pointer;
+      transition: background var(--ease);
+    }
+    .pl-modal-item:hover { background: var(--bg-hover); }
+    .pl-modal-thumb {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-xs);
+      background: var(--bg4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+      object-fit: cover;
+      overflow: hidden;
+    }
+    .pl-modal-info { flex: 1; min-width: 0; }
+    .pl-modal-name { font-size: 13px; font-weight: 500; }
+    .pl-modal-count { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+    .new-pl-row { display: flex; gap: 8px; }
+    .new-pl-input {
+      flex: 1;
+      padding: 7px 12px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border-color var(--ease);
+    }
+    .new-pl-input:focus { border-color: var(--accent); }
+    .new-pl-input::placeholder { color: var(--text3); }
+    .create-pl-btn {
+      padding: 7px 14px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      transition: background var(--ease);
+    }
+    .create-pl-btn:hover { background: var(--accent-h); }
+
+    /* ═══════════════════════════════════════════
+       TOAST
+    ═══════════════════════════════════════════ */
+    #toast-wrap {
+      position: fixed;
+      bottom: calc(var(--player-bar-h) + 16px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 700;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 9px 16px;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow);
+      animation: toastIn 0.25s ease;
+      pointer-events: auto;
+      white-space: nowrap;
+    }
+    .toast.ok { border-color: #1DB954; color: #1DB954; }
+    .toast.err { border-color: var(--accent); color: var(--accent); }
+
+    /* ═══════════════════════════════════════════
+       EMPTY / LOADING STATES
+    ═══════════════════════════════════════════ */
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--text2);
+    }
+    .empty-icon { font-size: 44px; margin-bottom: 14px; }
+    .empty-title { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .empty-sub { font-size: 13px; color: var(--text2); }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+      color: var(--text2);
+      font-size: 13px;
+      gap: 10px;
+    }
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--bg4);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    /* ═══════════════════════════════════════════
+       SCROLLBAR
+    ═══════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--bg-hover); }
+
+    /* ═══════════════════════════════════════════
+       ANIMATIONS
+    ═══════════════════════════════════════════ */
+    @keyframes fadeIn      { from { opacity: 0 } to { opacity: 1 } }
+    @keyframes slideInRight{ from { transform: translateX(100%) } to { transform: translateX(0) } }
+    @keyframes scaleIn     { from { transform: scale(0.94); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+    @keyframes spin        { to { transform: rotate(360deg) } }
+    @keyframes toastIn     { from { transform: translateY(8px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+    @keyframes toastOut    { to { opacity: 0; transform: translateY(4px) } }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .video-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); padding: 12px; gap: 12px; }
+      .settings-panel { width: 100%; }
+      .player-wrap { padding: 12px; }
+      .player-title { font-size: 16px; }
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <div class="header-left" onclick="loadTrending()">
-            <span style="color:#ff0000; font-size: 24px;">▶</span> CordisTube!
-        </div>
-        <div class="header-center">
-            <div class="search-container">
-                <input type="text" id="search-input" placeholder="Search">
-                <button class="search-btn" onclick="handleSearch()">🔍</button>
-            </div>
-        </div>
-        <div class="header-right">
-            <div class="channel-avatar" style="background: #065fd4;">U</div>
-        </div>
-    </header>
 
-    <div class="main-layout">
-        <div class="sidebar">
-            <div class="sidebar-item active" onclick="loadTrending()">🏠 Home</div>
-            <div class="sidebar-item" onclick="loadShorts()">📱 Shorts (very buggy!)</div>
-            <div class="sidebar-item">📺 Subscriptions (not yet here)</div>
-            <hr style="border: 0.5px solid var(--yt-border); margin: 12px 0;">
-            <div class="sidebar-item" onclick="loadHistoryPage()">🕒 History</div>
-            <div class="sidebar-item"> playlists (not yet)</div>
-        </div>
-        
-        <div id="page-container">
-            <div id="history-list"></div>
-            <div id="content"></div>
-        </div>
+<div id="ctx-menu" class="hidden">
+  <div class="ctx-item" onclick="ctxDownload()">
+    <span class="ctx-icon">⬇</span>
+    <span id="ctx-dl-label">Download</span>
+  </div>
+  <div class="ctx-item" onclick="ctxAddToPlaylist()">
+    <span class="ctx-icon">＋</span>
+    Add to Playlist
+  </div>
+</div>
+
+<div id="toast-wrap"></div>
+
+<header class="header">
+  <div class="header-logo" onclick="loadHome()">
+    <span class="logo-icon">▶</span>CordisTube
+  </div>
+  <div class="header-search">
+    <div class="search-row">
+      <input type="text" id="search-input" class="search-input" placeholder="Search…">
+      <button class="search-btn" onclick="handleSearch()">🔍</button>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
+  </div>
+</header>
+
+<div class="main-layout">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-item active" id="nav-home" onclick="loadHome()">
+      <span class="sidebar-icon">🏠</span> Home
+    </div>
+    <div class="sidebar-item" id="nav-history" onclick="loadHistoryPage()">
+      <span class="sidebar-icon">🕒</span> History
     </div>
 
-    <script>
-        const content = document.getElementById('content');
-        const searchInput = document.getElementById('search-input');
+    <hr class="sidebar-divider">
+    <div class="sidebar-section-title">Playlists</div>
+    <div id="sidebar-playlists"></div>
+    <div class="new-pl-btn" onclick="promptNewPlaylist()">
+      <span style="font-size:15px;width:18px;text-align:center;">＋</span>
+      New Playlist
+    </div>
+  </aside>
 
-        async function fetchAPI(url) {
-            const res = await fetch(url);
-            return res.json();
-        }
+  <!-- Content -->
+  <main id="page-container">
+    <div id="history-bar"></div>
+    <div id="content"></div>
+  </main>
+</div>
 
-        function setActiveSidebar(el) {
-            document.querySelectorAll('.sidebar-item').forEach(item => {
-                item.classList.remove('active');
-                if (item.innerText.includes(el)) item.classList.add('active');
-            });
-        }
+<!-- ─── Music Player Bar ─── -->
+<div id="music-player" class="hidden">
+  <div class="mp-progress-wrap" onclick="seekMusic(event)">
+    <div class="mp-progress-fill" id="mp-fill"></div>
+  </div>
+  <div class="mp-bar">
+    <div class="mp-track">
+      <img class="mp-thumb" id="mp-thumb" src="" alt="">
+      <div class="mp-text">
+        <div class="mp-title" id="mp-title">Not playing</div>
+        <div class="mp-artist" id="mp-artist"></div>
+      </div>
+    </div>
+    <div class="mp-controls">
+      <button class="ctrl-btn" onclick="prevTrack()" title="Previous">⏮</button>
+      <button class="ctrl-btn play-pause" id="mp-playbtn" onclick="toggleMusicPlay()">⏸</button>
+      <button class="ctrl-btn" onclick="nextTrack()" title="Next">⏭</button>
+    </div>
+    <div class="mp-extras">
+      <button class="ctrl-btn" onclick="downloadCurrentAudio()" title="Download audio">⬇</button>
+      <button class="ctrl-btn" onclick="closeMusicPlayer()" title="Close">✕</button>
+    </div>
+  </div>
+</div>
 
-        async function loadHistory() {
-            const history = await fetchAPI('/api/history');
-            const list = document.getElementById('history-list');
-            if (history.length === 0) { list.style.display = 'none'; return; }
-            list.style.display = 'flex';
-            list.innerHTML = history.map(h => `<div class="history-item" onclick="searchInput.value='${h}'; handleSearch()">${h}</div>`).join('');
-        }
+<!-- ─── Settings Overlay ─── -->
+<div id="settings-overlay" class="overlay hidden" onclick="closeSettings()"></div>
+<div id="settings-panel" class="settings-panel hidden">
+  <div class="sp-header">
+    Settings
+    <button class="icon-btn" onclick="closeSettings()">✕</button>
+  </div>
 
-        function renderVideos(videos) {
-            content.innerHTML = `<div class="video-grid">
-                ${videos.map(v => `
-                    <div class="video-card ${v.isShort ? 'short' : ''}" onclick="${v.isShort ? `playShort('${v.id}')` : `playVideo('${v.id}')`}" title="${v.title}">
-                        <div class="thumbnail-container">
-                            <img src="${v.thumbnail}" loading="lazy">
-                            ${v.duration !== 'N/A' ? `<div class="duration">${v.duration}</div>` : ''}
-                        </div>
-                        <div class="video-details">
-                            <div class="channel-avatar" onclick="event.stopPropagation(); viewChannel('${v.authorId}')">${(v.author || '?')[0]}</div>
-                            <div class="video-meta">
-                                <div class="video-title">${v.title}</div>
-                                <div class="channel-name" onclick="event.stopPropagation(); viewChannel('${v.authorId}')">${v.author}</div>
-                                <div class="video-stats">${v.isShort ? 'Short' : 'Video'}</div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>`;
-        }
+  <div class="sp-group">
+    <div class="sp-group-title">Appearance</div>
+    <div class="sp-row">
+      <div class="sp-label">
+        <span class="sp-icon">☀️</span>
+        <div><div class="sp-name">Light Mode</div></div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="tog-light" onchange="setLightMode(this.checked)">
+        <div class="toggle-track"></div>
+      </label>
+    </div>
+  </div>
 
-        async function loadHistoryPage() {
-            setActiveSidebar('History');
-            content.innerHTML = '<h2 style="padding:20px">Watch History</h2>';
-            const videos = await fetchAPI('/api/history/videos');
-            if (videos.length === 0) {
-                content.innerHTML += '<p style="padding:20px">No videos watched yet.</p>';
-                return;
-            }
-            const grid = document.createElement('div');
-            content.appendChild(grid);
-            grid.outerHTML = renderVideosHTML(videos);
-        }
+  <div class="sp-group">
+    <div class="sp-group-title">Playback</div>
+    <div class="sp-row">
+      <div class="sp-label">
+        <span class="sp-icon">🎵</span>
+        <div>
+          <div class="sp-name">Music Mode</div>
+          <div class="sp-desc">Audio-only, Spotify-style player</div>
+        </div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="tog-music" onchange="setMusicMode(this.checked)">
+        <div class="toggle-track"></div>
+      </label>
+    </div>
+  </div>
 
-        function renderVideosHTML(videos) {
-            return `<div class="video-grid">
-                ${videos.map(v => `
-                    <div class="video-card ${v.isShort ? 'short' : ''}" onclick="${v.isShort ? `playShort('${JSON.stringify(v).replace(/'/g, "\\'").replace(/"/g, '&quot;')}')` : `playVideo('${JSON.stringify(v).replace(/'/g, "\\'").replace(/"/g, '&quot;')}')`}" title="${v.title}">
-                        <div class="thumbnail-container">
-                            <img src="${v.thumbnail}" loading="lazy">
-                            ${v.duration !== 'N/A' ? `<div class="duration">${v.duration}</div>` : ''}
-                        </div>
-                        <div class="video-details">
-                            <div class="channel-avatar" onclick="event.stopPropagation(); viewChannel('${v.authorId}')">${(v.author || '?')[0]}</div>
-                            <div class="video-meta">
-                                <div class="video-title">${v.title}</div>
-                                <div class="channel-name" onclick="event.stopPropagation(); viewChannel('${v.authorId}')">${v.author}</div>
-                                <div class="video-stats">${v.isShort ? 'Short' : 'Video'}</div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>`;
-        }
+  <div class="sp-group">
+    <div class="sp-group-title">Downloads</div>
+    <div class="sp-row">
+      <div class="sp-label">
+        <span class="sp-icon">💾</span>
+        <div>
+          <div class="sp-name">Cache Download</div>
+          <div class="sp-desc">watch offline in  the browser!</div>
+        </div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="tog-cache" onchange="setCacheDownload(this.checked)">
+        <div class="toggle-track"></div>
+      </label>
+    </div>
+    <div style="margin-top:8px;font-size:12px;color:var(--text3)" id="cached-count-label"></div>
+    <button class="action-pill" style="margin-top:8px;" onclick="clearAllCache()">Clear All Cached Videos</button>
+  </div>
 
-        function renderVideos(videos) {
-            content.innerHTML = renderVideosHTML(videos);
-        }
+  <div class="sp-group">
+    <div class="sp-group-title">App</div>
+    <button class="install-btn" id="install-btn" onclick="installPWA()" disabled>
+      Install as Web App
+    </button>
+    <div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:center">
+      Available when accessed in a supported browser
+    </div>
+  </div>
+</div>
 
-        async function handleSearch() {
-            const q = searchInput.value;
-            if (!q) return;
-            content.innerHTML = '<p style="padding:20px">Searching...</p>';
-            const videos = await fetchAPI(`/api/search?q=${encodeURIComponent(q)}`);
-            renderVideos(videos);
-            loadHistory();
-        }
+<div id="pl-overlay" class="modal-overlay hidden" onclick="closePlModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      Add to Playlist
+      <button class="icon-btn" onclick="closePlModal()">✕</button>
+    </div>
+    <div class="modal-body" id="pl-modal-body"></div>
+    <div class="modal-footer">
+      <div class="new-pl-row">
+        <input type="text" id="new-pl-input" class="new-pl-input" placeholder="New playlist name…">
+        <button class="create-pl-btn" onclick="createAndAdd()">Create</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-        async function loadTrending() {
-            setActiveSidebar('Home');
-            content.innerHTML = '<p style="padding:20px">Loading trending...</p>';
-            const videos = await fetchAPI('/api/trending');
-            renderVideos(videos);
-            loadHistory();
-        }
+<audio id="music-audio" preload="none"></audio>
 
-        async function loadShorts() {
-            setActiveSidebar('Shorts');
-            content.innerHTML = '<p style="padding:20px">Loading shorts...</p>';
-            const shorts = await fetchAPI('/api/shorts');
-            if (!Array.isArray(shorts)) {
-                content.innerHTML = '<p style="padding:20px">No shorts available at the moment.</p>';
-                return;
-            }
-            if (shorts.length === 0) {
-                content.innerHTML = '<p style="padding:20px">No shorts available.</p>';
-                return;
-            }
-            content.innerHTML = `<div class="shorts-container">
-                ${shorts.map(s => `
-                    <div class="short-player">
-                        <video src="/api/proxy/${s.id}" controls loop></video>
-                        <div style="position:absolute; bottom:20px; left:20px; text-shadow: 1px 1px 2px black;">
-                            <h3>${s.title}</h3>
-                            <button onclick="viewChannel('${s.authorId}')">${s.author}</button>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>`;
-        }
+<script>
+/* =====================================================
+   STORAGE KEYS
+   ===================================================== */
+const SK = {
+  SETTINGS:      'ct_settings',
+  PLAYLISTS:     'ct_playlists',
+  SEARCH_HIST:   'ct_search_hist',
+  WATCH_HIST:    'ct_watch_hist',
+  CACHED_META:   'ct_cached_meta',
+};
 
-        async function viewChannel(id) {
-            if (!id) return;
-            content.innerHTML = '<p style="padding:20px">Loading channel...</p>';
-            const data = await fetchAPI(`/api/channel/${id}`);
-            renderChannel(id, data);
-        }
+/* =====================================================
+   STATE
+   ===================================================== */
+const S = {
+  // Persisted
+  settings: { lightMode: false, musicMode: false, cacheDownload: false },
+  playlists: [],
+  searchHist: [],
+  watchHist: [],
+  cachedMeta: [],   // [{id,title,author,thumbnail,duration}]
+  // Runtime
+  ctxVideo: null,
+  pendingPlVideo: null,
+  currentPlaylistId: null,
+  currentPlIndex: -1,
+  musicQueue: [],
+  musicQueueIdx: 0,
+  deferredInstall: null,
+};
 
-        function renderChannel(id, data) {
-            content.innerHTML = `
-                <div class="channel-header">
-                    <img src="${data.thumbnail}">
-                    <div>
-                        <h1 style="margin:0">${data.title}</h1>
-                        <p style="color:#aaa">${data.subscribers || 'No subscribers'}</p>
-                    </div>
-                </div>
-                <div class="tabs">
-                    <div id="tab-videos" class="tab active" onclick="switchChannelTab('${id}', 'videos')">Videos</div>
-                    <div id="tab-shorts" class="tab" onclick="switchChannelTab('${id}', 'shorts')">Shorts</div>
-                </div>
-                <div id="channel-content"></div>
-            `;
-            renderChannelGrid(data.videos);
-        }
+/* =====================================================
+   VIDEO MAP (id → video object, avoids innerHTML injection)
+   ===================================================== */
+const VM = new Map();
+function vStore(v) { if (v?.id) VM.set(v.id, v); }
+function vGet(id) { return VM.get(id) || null; }
 
-        function renderChannelGrid(videos) {
-            const target = document.getElementById('channel-content');
-            if (!Array.isArray(videos)) {
-                target.innerHTML = '<p style="padding:20px">No content found.</p>';
-                return;
-            }
-            target.innerHTML = renderVideosHTML(videos);
-        }
+/* =====================================================
+   PERSISTENCE
+   ===================================================== */
+function load() {
+  try {
+    Object.assign(S.settings, JSON.parse(localStorage.getItem(SK.SETTINGS) || '{}'));
+    S.playlists  = JSON.parse(localStorage.getItem(SK.PLAYLISTS)   || '[]');
+    S.searchHist = JSON.parse(localStorage.getItem(SK.SEARCH_HIST) || '[]');
+    S.watchHist  = JSON.parse(localStorage.getItem(SK.WATCH_HIST)  || '[]');
+    S.cachedMeta = JSON.parse(localStorage.getItem(SK.CACHED_META) || '[]');
+    S.cachedMeta.forEach(vStore);
+    S.watchHist.forEach(vStore);
+  } catch(e) { console.warn('State load error', e); }
+}
+const saveSettings  = () => localStorage.setItem(SK.SETTINGS,    JSON.stringify(S.settings));
+const savePlaylists = () => localStorage.setItem(SK.PLAYLISTS,   JSON.stringify(S.playlists));
+const saveSearchH   = () => localStorage.setItem(SK.SEARCH_HIST, JSON.stringify(S.searchHist));
+const saveWatchH    = () => localStorage.setItem(SK.WATCH_HIST,  JSON.stringify(S.watchHist));
+const saveCachedM   = () => localStorage.setItem(SK.CACHED_META, JSON.stringify(S.cachedMeta));
 
-        async function switchChannelTab(id, type) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(`tab-${type}`).classList.add('active');
-            
-            const videos = type === 'videos' 
-                ? (await fetchAPI(`/api/channel/${id}`)).videos 
-                : await fetchAPI(`/api/channel/${id}/shorts`);
-            
-            renderChannelGrid(videos);
-        }
+/* =====================================================
+   HELPERS
+   ===================================================== */
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function fmtNum(n) {
+  if (!n) return '';
+  if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+  return String(n);
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
 
-        async function recordHistory(video) {
-            await fetch('/api/history/watch', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: typeof video === 'string' ? video : JSON.stringify(video)
-            });
-        }
+async function api(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
 
-        function playVideo(videoData) {
-            const v = typeof videoData === 'string' ? JSON.parse(videoData) : videoData;
-            recordHistory(v);
-            content.innerHTML = `<div style="padding:20px; max-width: 1000px; margin: 0 auto;">
-                <video src="/api/proxy/${v.id}" controls autoplay style="width:100%; border-radius: 12px;"></video>
-                <h2>${v.title}</h2>
-                <p>${v.author}</p>
-                <br><br>
-                <button onclick="loadTrending()">Back</button>
-            </div>`;
-        }
+/* =====================================================
+   TOAST
+   ===================================================== */
+function toast(msg, type = '', ms = 3000) {
+  const w = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  w.appendChild(t);
+  setTimeout(() => {
+    t.style.animation = 'toastOut 0.25s ease forwards';
+    setTimeout(() => t.remove(), 250);
+  }, ms);
+}
 
-        function playShort(videoData) {
-            const v = typeof videoData === 'string' ? JSON.parse(videoData) : videoData;
-            recordHistory(v);
-            content.innerHTML = `<div class="shorts-container">
-                <div class="short-player">
-                    <video src="/api/proxy/${v.id}" controls autoplay loop></video>
-                </div>
-                <button onclick="loadTrending()">Back to Home</button>
-            </div>`;
-        }
+/* =====================================================
+   SETTINGS
+   ===================================================== */
+function applySettings() {
+  const html = document.getElementById('html-root');
+  html.classList.toggle('light-mode', S.settings.lightMode);
+  html.classList.toggle('music-mode', S.settings.musicMode);
+  document.getElementById('tog-light').checked  = S.settings.lightMode;
+  document.getElementById('tog-music').checked  = S.settings.musicMode;
+  document.getElementById('tog-cache').checked  = S.settings.cacheDownload;
+  document.getElementById('theme-color-meta').content = S.settings.lightMode ? '#f7f7f7' : '#0f0f0f';
+  updateCachedLabel();
+}
 
-        searchInput.addEventListener('keypress', e => e.key === 'Enter' && handleSearch());
-        loadTrending();
-    </script>
+function setLightMode(v) { S.settings.lightMode = v; saveSettings(); applySettings(); }
+function setMusicMode(v) { S.settings.musicMode = v; saveSettings(); applySettings(); loadHome(); }
+function setCacheDownload(v) { S.settings.cacheDownload = v; saveSettings(); }
+
+function updateCachedLabel() {
+  const el = document.getElementById('cached-count-label');
+  if (el) el.textContent = S.cachedMeta.length
+    ? `${S.cachedMeta.length} video(s) cached for offline`
+    : 'No cached videos yet';
+}
+
+function openSettings() {
+  updateCachedLabel();
+  document.getElementById('settings-overlay').classList.remove('hidden');
+  document.getElementById('settings-panel').classList.remove('hidden');
+}
+function closeSettings() {
+  document.getElementById('settings-overlay').classList.add('hidden');
+  document.getElementById('settings-panel').classList.add('hidden');
+}
+
+/* =====================================================
+   PWA INSTALL
+   ===================================================== */
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  S.deferredInstall = e;
+  const btn = document.getElementById('install-btn');
+  if (btn) { btn.disabled = false; btn.textContent = '📱 Install as Web App'; }
+});
+
+async function installPWA() {
+  if (!S.deferredInstall) return;
+  S.deferredInstall.prompt();
+  const { outcome } = await S.deferredInstall.userChoice;
+  if (outcome === 'accepted') toast('App installed!', 'ok');
+  S.deferredInstall = null;
+}
+
+/* =====================================================
+   SEARCH HISTORY  (device-only — localStorage)
+   ===================================================== */
+function addSearchH(q) {
+  S.searchHist = S.searchHist.filter(h => h !== q);
+  S.searchHist.unshift(q);
+  if (S.searchHist.length > 20) S.searchHist.length = 20;
+  saveSearchH();
+}
+
+function renderHistoryBar() {
+  const bar = document.getElementById('history-bar');
+  if (!S.searchHist.length) { bar.innerHTML = ''; return; }
+  bar.innerHTML = S.searchHist.slice(0, 12).map(h =>
+    `<div class="h-chip" onclick="quickSearch('${esc(h)}')">${esc(h)}</div>`
+  ).join('');
+}
+
+function quickSearch(q) {
+  document.getElementById('search-input').value = q;
+  handleSearch();
+}
+
+/* =====================================================
+   WATCH HISTORY  (device-only — localStorage)
+   ===================================================== */
+function addWatchH(v) {
+  S.watchHist = S.watchHist.filter(w => w.id !== v.id);
+  S.watchHist.unshift(v);
+  if (S.watchHist.length > 120) S.watchHist.length = 120;
+  saveWatchH();
+}
+
+/* =====================================================
+   SIDEBAR ACTIVE STATE
+   ===================================================== */
+function setNav(id) {
+  document.querySelectorAll('.sidebar-item, .sidebar-pl-item').forEach(el => el.classList.remove('active'));
+  if (id) { const el = document.getElementById(id); if (el) el.classList.add('active'); }
+}
+
+/* =====================================================
+   RENDER VIDEO CARD
+   ===================================================== */
+function cardHtml(v) {
+  if (!v?.id) return '';
+  vStore(v);
+  const init = (v.author || '?')[0].toUpperCase();
+  const dur  = v.duration && v.duration !== 'N/A' ? `<span class="duration-pill">${esc(v.duration)}</span>` : '';
+  return `
+    <div class="video-card" onclick="handleCardClick('${v.id}')">
+      <div class="thumb-wrap">
+        <img src="${esc(v.thumbnail)}" loading="lazy" alt="${esc(v.title)}"
+             onerror="this.style.background='var(--bg4)'">
+        ${dur}
+      </div>
+      <div class="card-body">
+        <div class="ch-avatar-sm" onclick="event.stopPropagation(); viewChannel('${esc(v.authorId || '')}')"
+             title="${esc(v.author)}">${init}</div>
+        <div class="card-text">
+          <div class="card-title">${esc(v.title)}</div>
+          <div class="card-channel" onclick="event.stopPropagation(); viewChannel('${esc(v.authorId || '')}')">${esc(v.author)}</div>
+        </div>
+      </div>
+      <button class="dots-btn" onclick="event.stopPropagation(); showCtx(event,'${v.id}')" title="More">⋮</button>
+    </div>`;
+}
+
+function renderGrid(videos, targetId = 'content') {
+  // Update music queue with this set of videos
+  if (videos?.length) { S.musicQueue = videos; S.musicQueueIdx = 0; }
+  const el = document.getElementById(targetId);
+  if (!videos?.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">No videos found</div><div class="empty-sub">Try a different search</div></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="video-grid">${videos.map(cardHtml).join('')}</div>`;
+}
+
+/* =====================================================
+   NAVIGATION — HOME
+   ===================================================== */
+async function loadHome() {
+  setNav('nav-home');
+  renderHistoryBar();
+  const c = document.getElementById('content');
+
+  // Offline: show cached videos
+  if (!navigator.onLine && S.cachedMeta.length) {
+    c.innerHTML = `<div class="sec-heading">📴 Offline — Cached Videos</div>
+      <div class="sec-sub">${S.cachedMeta.length} video(s) saved for offline</div>
+      <div class="video-grid">${S.cachedMeta.map(cardHtml).join('')}</div>`;
+    return;
+  }
+
+  c.innerHTML = `<div class="loading"><div class="spinner"></div>Loading…</div>`;
+  try {
+    const terms = S.searchHist.slice(0, 3).join(',');
+    const url = terms ? `/api/trending?terms=${encodeURIComponent(terms)}` : '/api/trending';
+    renderGrid(await api(url));
+  } catch(e) {
+    c.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Could not load</div><div class="empty-sub">${esc(e.message)}</div></div>`;
+  }
+}
+
+/* ─── SEARCH ─── */
+async function handleSearch() {
+  const q = document.getElementById('search-input').value.trim();
+  if (!q) return;
+  addSearchH(q);
+  renderHistoryBar();
+  setNav('');
+  const c = document.getElementById('content');
+  c.innerHTML = `<div class="loading"><div class="spinner"></div>Searching…</div>`;
+  try {
+    renderGrid(await api(`/api/search?q=${encodeURIComponent(q)}`));
+  } catch(e) {
+    c.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Search failed</div><div class="empty-sub">${esc(e.message)}</div></div>`;
+  }
+}
+
+/* ─── HISTORY PAGE ─── */
+function loadHistoryPage() {
+  setNav('nav-history');
+  document.getElementById('history-bar').innerHTML = '';
+  const c = document.getElementById('content');
+  if (!S.watchHist.length) {
+    c.innerHTML = `<div class="empty-state"><div class="empty-icon">🕒</div><div class="empty-title">No watch history</div><div class="empty-sub">Videos you watch will appear here</div></div>`;
+    return;
+  }
+  c.innerHTML = `<div class="sec-heading">Watch History</div><div class="video-grid">${S.watchHist.map(cardHtml).join('')}</div>`;
+}
+
+/* =====================================================
+   CARD CLICK DISPATCHER
+   ===================================================== */
+function handleCardClick(id) {
+  const v = vGet(id);
+  if (!v) return;
+  // Clear playlist context when manually choosing a video
+  S.currentPlaylistId = null;
+  S.currentPlIndex = -1;
+  // Set music queue position to this video
+  const qi = S.musicQueue.findIndex(t => t.id === id);
+  if (qi >= 0) S.musicQueueIdx = qi;
+  if (S.settings.musicMode) playMusicTrack(v);
+  else playVideo(v);
+}
+
+/* =====================================================
+   VIDEO PLAYER
+   ===================================================== */
+let captionsLoaded = false;
+
+async function playVideo(v) {
+  captionsLoaded = false;
+  addWatchH(v);
+  const c = document.getElementById('content');
+  c.innerHTML = `
+    <div class="player-wrap">
+      <video id="main-video" class="player-video" controls autoplay preload="auto">
+        <source src="/api/proxy/${v.id}" type="video/mp4">
+      </video>
+      <div class="player-actions">
+        <button class="action-pill" onclick="dlVideo('${v.id}')">⬇ Download</button>
+        <button class="action-pill" id="cc-btn" onclick="toggleCaptions('${v.id}')">CC Captions</button>
+        <button class="action-pill" onclick="openPlModal('${v.id}')">＋ Playlist</button>
+      </div>
+      <div class="player-title">${esc(v.title)}</div>
+      <div class="player-meta">
+        <span class="player-channel" onclick="viewChannel('${esc(v.authorId||'')}')">${esc(v.author)}</span>
+      </div>
+      <div id="player-extra"></div>
+    </div>`;
+
+  const vid = document.getElementById('main-video');
+  vid.addEventListener('ended', onEnded);
+
+  // Fetch extra info async
+  try {
+    const info = await api(`/api/stream/${v.id}`);
+    const ex = document.getElementById('player-extra');
+    if (!ex) return;
+    const viewStr = info.viewCount ? `<span class="player-views">${fmtNum(info.viewCount)} views</span>` : '';
+    const descHtml = info.description
+      ? `<div class="player-desc" id="pdesc">${esc(info.description)}</div>
+         <div class="show-more" onclick="toggleDesc(this)">Show more</div>`
+      : '';
+    ex.innerHTML = viewStr + descHtml;
+
+    if (!info.hasCaptions) {
+      const btn = document.getElementById('cc-btn');
+      if (btn) { btn.disabled = true; btn.title = 'No captions available'; }
+    }
+  } catch(_) {}
+}
+
+function toggleDesc(btn) {
+  const d = document.getElementById('pdesc');
+  if (!d) return;
+  const exp = d.classList.toggle('expanded');
+  btn.textContent = exp ? 'Show less' : 'Show more';
+}
+
+async function toggleCaptions(id) {
+  const vid = document.getElementById('main-video');
+  const btn = document.getElementById('cc-btn');
+  if (!vid || !btn) return;
+
+  if (!captionsLoaded) {
+    btn.textContent = 'CC Loading…';
+    try {
+      // Remove any existing tracks
+      vid.querySelectorAll('track').forEach(t => t.remove());
+      const track = document.createElement('track');
+      track.kind    = 'subtitles';
+      track.label   = 'Auto';
+      track.srclang = 'en';
+      track.src     = `/api/captions/${id}`;
+      track.default = true;
+      vid.appendChild(track);
+      captionsLoaded = true;
+      // Wait a tick for the track to register
+      await new Promise(r => setTimeout(r, 300));
+      if (vid.textTracks[0]) vid.textTracks[0].mode = 'showing';
+      btn.textContent = 'CC On';
+      btn.classList.add('active');
+    } catch(_) {
+      toast('Captions unavailable', 'err');
+      btn.textContent = 'CC Captions';
+    }
+    return;
+  }
+
+  // Toggle existing track
+  const t = vid.textTracks[0];
+  if (t) {
+    const showing = t.mode === 'showing';
+    t.mode = showing ? 'hidden' : 'showing';
+    btn.textContent = showing ? 'CC Off' : 'CC On';
+    btn.classList.toggle('active', !showing);
+  }
+}
+
+/* ─── Auto-advance (playlist / queue) ─── */
+function onEnded() {
+  if (S.currentPlaylistId) {
+    const pl = S.playlists.find(p => p.id === S.currentPlaylistId);
+    if (pl && S.currentPlIndex < pl.videos.length - 1) {
+      S.currentPlIndex++;
+      const next = pl.videos[S.currentPlIndex];
+      if (S.settings.musicMode) playMusicTrack(next); else playVideo(next);
+      return;
+    }
+    S.currentPlaylistId = null; S.currentPlIndex = -1;
+    return;
+  }
+  // Music queue auto-advance
+  if (S.settings.musicMode && S.musicQueueIdx < S.musicQueue.length - 1) {
+    S.musicQueueIdx++;
+    playMusicTrack(S.musicQueue[S.musicQueueIdx]);
+  }
+}
+
+/* =====================================================
+   CHANNEL PAGE (improved)
+   ===================================================== */
+let _chData = null;
+
+async function viewChannel(id) {
+  if (!id) return;
+  setNav('');
+  document.getElementById('history-bar').innerHTML = '';
+  const c = document.getElementById('content');
+  c.innerHTML = `<div class="loading"><div class="spinner"></div>Loading channel…</div>`;
+  try {
+    _chData = await api(`/api/channel/${id}`);
+    (_chData.videos || []).forEach(vStore);
+    renderChannel(id, _chData);
+  } catch(e) {
+    c.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Could not load channel</div></div>`;
+  }
+}
+
+function renderChannel(id, d) {
+  const banner = d.banner
+    ? `<img class="ch-banner" src="${esc(d.banner)}" alt="">`
+    : `<div class="ch-banner-placeholder"></div>`;
+  const subs = d.subscribers ? esc(String(d.subscribers)) : '';
+  const vcount = d.videoCount ? ` · ${esc(String(d.videoCount))} videos` : '';
+  document.getElementById('content').innerHTML = `
+    ${banner}
+    <div class="ch-info-row">
+      <img class="ch-avatar-lg" src="${esc(d.thumbnail)}" alt="${esc(d.title)}"
+           onerror="this.style.background='var(--bg4)'">
+      <div class="ch-details">
+        <div class="ch-name">${esc(d.title)}</div>
+        <div class="ch-stats">${subs}${vcount}</div>
+      </div>
+    </div>
+    ${d.description ? `<div class="ch-desc-area">${esc(d.description.slice(0,220))}${d.description.length>220?'…':''}</div>` : ''}
+    <div class="ch-tabs">
+      <div class="ch-tab active" id="chtab-videos" onclick="switchChTab('videos')">Videos</div>
+      <div class="ch-tab" id="chtab-about" onclick="switchChTab('about')">About</div>
+    </div>
+    <div id="ch-content"></div>`;
+  renderChVideos(_chData.videos || []);
+}
+
+function renderChVideos(videos) {
+  const el = document.getElementById('ch-content');
+  if (!el) return;
+  if (!videos.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">No videos</div></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="video-grid">${videos.map(cardHtml).join('')}</div>`;
+}
+
+function switchChTab(tab) {
+  document.querySelectorAll('.ch-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`chtab-${tab}`)?.classList.add('active');
+  if (tab === 'videos') {
+    renderChVideos(_chData?.videos || []);
+  } else {
+    document.getElementById('ch-content').innerHTML = `
+      <div style="padding:20px 24px;max-width:680px;">
+        <p style="font-size:13px;line-height:1.7;color:var(--text2)">
+          ${esc(_chData?.description || 'No description available.')}
+        </p>
+      </div>`;
+  }
+}
+
+/* =====================================================
+   MUSIC PLAYER
+   ===================================================== */
+const audioEl = document.getElementById('music-audio');
+
+function playMusicTrack(v) {
+  if (!v) return;
+  vStore(v);
+  addWatchH(v);
+  audioEl.src = `/api/proxy/audio/${v.id}`;
+  audioEl.play().catch(e => console.warn('Audio play error', e));
+
+  document.getElementById('mp-thumb').src    = v.thumbnail;
+  document.getElementById('mp-title').textContent  = v.title;
+  document.getElementById('mp-artist').textContent = v.author;
+  document.getElementById('mp-playbtn').textContent = '⏸';
+  document.getElementById('music-player').classList.remove('hidden');
+
+  setupMediaSession(v);
+  audioEl.onended = onEnded;
+}
+
+function toggleMusicPlay() {
+  const btn = document.getElementById('mp-playbtn');
+  if (audioEl.paused) {
+    audioEl.play(); btn.textContent = '⏸';
+  } else {
+    audioEl.pause(); btn.textContent = '▶';
+  }
+}
+
+function nextTrack() {
+  if (S.currentPlaylistId) {
+    const pl = S.playlists.find(p => p.id === S.currentPlaylistId);
+    if (pl && S.currentPlIndex < pl.videos.length - 1) {
+      S.currentPlIndex++;
+      playMusicTrack(pl.videos[S.currentPlIndex]);
+    }
+  } else if (S.musicQueueIdx < S.musicQueue.length - 1) {
+    S.musicQueueIdx++;
+    playMusicTrack(S.musicQueue[S.musicQueueIdx]);
+  }
+}
+
+function prevTrack() {
+  if (audioEl.currentTime > 3) { audioEl.currentTime = 0; return; }
+  if (S.currentPlaylistId) {
+    const pl = S.playlists.find(p => p.id === S.currentPlaylistId);
+    if (pl && S.currentPlIndex > 0) {
+      S.currentPlIndex--;
+      playMusicTrack(pl.videos[S.currentPlIndex]);
+    }
+  } else if (S.musicQueueIdx > 0) {
+    S.musicQueueIdx--;
+    playMusicTrack(S.musicQueue[S.musicQueueIdx]);
+  }
+}
+
+function closeMusicPlayer() {
+  audioEl.pause();
+  audioEl.src = '';
+  document.getElementById('music-player').classList.add('hidden');
+}
+
+function seekMusic(e) {
+  const wrap = e.currentTarget;
+  const pct  = Math.max(0, Math.min(1, (e.clientX - wrap.getBoundingClientRect().left) / wrap.offsetWidth));
+  if (audioEl.readyState >= 2 && audioEl.duration) audioEl.currentTime = pct * audioEl.duration;
+}
+
+audioEl.addEventListener('timeupdate', () => {
+  if (audioEl.duration) {
+    document.getElementById('mp-fill').style.width = (audioEl.currentTime / audioEl.duration * 100) + '%';
+  }
+});
+
+function setupMediaSession(v) {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: v.title, artist: v.author,
+    artwork: [{ src: v.thumbnail, sizes: '256x256', type: 'image/jpeg' }],
+  });
+  navigator.mediaSession.setActionHandler('play',          () => { audioEl.play();  document.getElementById('mp-playbtn').textContent = '⏸'; });
+  navigator.mediaSession.setActionHandler('pause',         () => { audioEl.pause(); document.getElementById('mp-playbtn').textContent = '▶'; });
+  navigator.mediaSession.setActionHandler('nexttrack',     nextTrack);
+  navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
+}
+
+/* =====================================================
+   DOWNLOAD
+   ===================================================== */
+function triggerDl(url, filename) {
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+async function dlVideo(id) {
+  const v = vGet(id);
+  if (!v) return;
+  if (S.settings.cacheDownload) {
+    await cacheVideo(v, false);
+  } else {
+    triggerDl(`/api/download/${id}`, `${v.title || id}.mp4`);
+    toast('Download started…', 'ok');
+  }
+}
+
+async function dlAudio(id) {
+  const v = vGet(id);
+  if (!v) return;
+  if (S.settings.cacheDownload) {
+    await cacheVideo(v, true);
+  } else {
+    triggerDl(`/api/download/audio/${id}`, `${v.title || id}.m4a`);
+    toast('Audio download started…', 'ok');
+  }
+}
+
+async function downloadCurrentAudio() {
+  const id = audioEl.src.split('/').pop();
+  if (!id) return;
+  const v = vGet(id) || { id, title: id, author: '' };
+  await dlAudio(v.id);
+}
+
+/* ─── Cache Download ─── */
+async function cacheVideo(v, audioOnly = false) {
+  if (!('caches' in window)) { toast('Cache not supported', 'err'); return; }
+  if (S.cachedMeta.some(c => c.id === v.id)) { toast('Already cached', 'ok'); return; }
+  toast('Caching…', '', 5000);
+  try {
+    const proxyUrl = audioOnly ? `/api/proxy/audio/${v.id}` : `/api/proxy/${v.id}`;
+    const cache = await caches.open('cordistube-videos');
+    const res   = await fetch(proxyUrl);
+    await cache.put(proxyUrl, res.clone());
+    const meta  = { id: v.id, title: v.title, author: v.author, thumbnail: v.thumbnail, duration: v.duration, audioOnly };
+    S.cachedMeta.push(meta);
+    saveCachedM();
+    vStore(v);
+    toast('Saved for offline!', 'ok');
+    updateCachedLabel();
+  } catch(e) { toast('Cache failed: ' + e.message, 'err'); }
+}
+
+async function clearAllCache() {
+  if (!confirm('Clear all cached videos?')) return;
+  try {
+    await caches.delete('cordistube-videos');
+    S.cachedMeta = [];
+    saveCachedM();
+    updateCachedLabel();
+    toast('Cache cleared', 'ok');
+  } catch(e) { toast('Failed: ' + e.message, 'err'); }
+}
+
+/* =====================================================
+   CONTEXT MENU (3-dots)
+   ===================================================== */
+function showCtx(e, id) {
+  e.stopPropagation();
+  S.ctxVideo = vGet(id);
+  const label = S.settings.musicMode ? 'Download Audio' : 'Download Video';
+  document.getElementById('ctx-dl-label').textContent = label;
+  const m = document.getElementById('ctx-menu');
+  m.classList.remove('hidden');
+  const x = Math.min(e.clientX, window.innerWidth  - 190);
+  const y = Math.min(e.clientY, window.innerHeight - 110);
+  m.style.left = x + 'px';
+  m.style.top  = y + 'px';
+}
+
+function hideCtx() { document.getElementById('ctx-menu').classList.add('hidden'); }
+
+function ctxDownload() {
+  hideCtx();
+  const v = S.ctxVideo;
+  if (!v) return;
+  if (S.settings.musicMode) dlAudio(v.id); else dlVideo(v.id);
+}
+
+function ctxAddToPlaylist() {
+  hideCtx();
+  if (S.ctxVideo) openPlModal(S.ctxVideo.id);
+}
+
+document.addEventListener('click', e => {
+  if (!document.getElementById('ctx-menu').contains(e.target)) hideCtx();
+});
+
+/* =====================================================
+   PLAYLISTS
+   ===================================================== */
+function renderSidebarPlaylists() {
+  const el = document.getElementById('sidebar-playlists');
+  el.innerHTML = S.playlists.map(pl => {
+    const th = pl.videos[0]?.thumbnail;
+    const img = th
+      ? `<img class="pl-mini-thumb" src="${esc(th)}" alt="" onerror="this.style.background='var(--bg4)'">`
+      : `<div class="pl-mini-thumb">🎵</div>`;
+    return `<div class="sidebar-pl-item" id="nav-pl-${pl.id}" onclick="loadPlaylistPage('${pl.id}')">
+      ${img}<span class="pl-mini-name">${esc(pl.name)}</span>
+    </div>`;
+  }).join('');
+}
+
+function loadPlaylistPage(id) {
+  const pl = S.playlists.find(p => p.id === id);
+  if (!pl) return;
+  setNav(`nav-pl-${id}`);
+  document.getElementById('history-bar').innerHTML = '';
+  pl.videos.forEach(vStore);
+
+  const th   = pl.videos[0]?.thumbnail;
+  const cover = th
+    ? `<img class="pl-cover" src="${esc(th)}" alt="" onerror="this.style.background='var(--bg4)'">`
+    : `<div class="pl-cover">🎵</div>`;
+  const unit = S.settings.musicMode ? 'track' : 'video';
+  const cnt  = pl.videos.length;
+
+  document.getElementById('content').innerHTML = `
+    <div class="pl-page-header">
+      ${cover}
+      <div class="pl-page-info">
+        <div class="pl-page-name">${esc(pl.name)}</div>
+        <div class="pl-page-count">${cnt} ${unit}${cnt !== 1 ? 's' : ''}</div>
+        <div class="pl-page-actions">
+          <button class="action-pill" onclick="playPlaylist('${id}')">▶ Play All</button>
+          <button class="action-pill" onclick="downloadPlaylist('${id}')">⬇ Download All</button>
+          <button class="action-pill" style="color:var(--accent)" onclick="deletePlaylist('${id}')">🗑 Delete</button>
+        </div>
+      </div>
+    </div>
+    <div class="pl-list">
+      ${pl.videos.map((v, i) => `
+        <div class="pl-row" onclick="playFromPlaylist('${id}', ${i})">
+          <div class="pl-row-num">${i+1}</div>
+          <img class="pl-row-thumb" src="${esc(v.thumbnail)}" alt=""
+               onerror="this.style.background='var(--bg4)'">
+          <div class="pl-row-info">
+            <div class="pl-row-title">${esc(v.title)}</div>
+            <div class="pl-row-meta">${esc(v.author)}${v.duration && v.duration !== 'N/A' ? ' · ' + esc(v.duration) : ''}</div>
+          </div>
+          <button class="pl-row-dots" onclick="event.stopPropagation(); showCtx(event,'${v.id}')">⋮</button>
+        </div>`).join('')}
+    </div>`;
+  document.getElementById('content').scrollTop = 0;
+}
+
+function playPlaylist(id) {
+  const pl = S.playlists.find(p => p.id === id);
+  if (!pl?.videos.length) return;
+  S.currentPlaylistId = id;
+  S.currentPlIndex = 0;
+  const v = pl.videos[0];
+  if (S.settings.musicMode) playMusicTrack(v); else playVideo(v);
+}
+
+function playFromPlaylist(id, idx) {
+  const pl = S.playlists.find(p => p.id === id);
+  if (!pl) return;
+  S.currentPlaylistId = id;
+  S.currentPlIndex = idx;
+  const v = pl.videos[idx];
+  if (S.settings.musicMode) playMusicTrack(v); else playVideo(v);
+}
+
+async function downloadPlaylist(id) {
+  const pl = S.playlists.find(p => p.id === id);
+  if (!pl?.videos.length) return;
+  const audio = S.settings.musicMode;
+  if (S.settings.cacheDownload) {
+    toast(`Caching ${pl.videos.length} items…`, '', 4000);
+    for (const v of pl.videos) {
+      await cacheVideo(v, audio);
+      await new Promise(r => setTimeout(r, 600));
+    }
+    toast('All items cached!', 'ok');
+  } else {
+    toast(`Downloading ${pl.videos.length} files…`, 'ok');
+    pl.videos.forEach((v, i) => {
+      setTimeout(() => {
+        const ext = audio ? '.m4a' : '.mp4';
+        const ep  = audio ? '/api/download/audio/' : '/api/download/';
+        triggerDl(`${ep}${v.id}`, `${v.title || v.id}${ext}`);
+      }, i * 1800);
+    });
+  }
+}
+
+function deletePlaylist(id) {
+  if (!confirm('Delete this playlist?')) return;
+  S.playlists = S.playlists.filter(p => p.id !== id);
+  savePlaylists();
+  renderSidebarPlaylists();
+  loadHome();
+  toast('Playlist deleted', '');
+}
+
+/* ─── Add-to-Playlist Modal ─── */
+function openPlModal(videoId) {
+  S.pendingPlVideo = vGet(videoId);
+  if (!S.pendingPlVideo) return;
+  const body = document.getElementById('pl-modal-body');
+  body.innerHTML = S.playlists.length
+    ? S.playlists.map(pl => {
+        const th = pl.videos[0]?.thumbnail;
+        const img = th
+          ? `<img class="pl-modal-thumb" src="${esc(th)}" alt="">`
+          : `<div class="pl-modal-thumb">🎵</div>`;
+        return `<div class="pl-modal-item" onclick="addToExisting('${pl.id}')">
+          ${img}
+          <div class="pl-modal-info">
+            <div class="pl-modal-name">${esc(pl.name)}</div>
+            <div class="pl-modal-count">${pl.videos.length} item${pl.videos.length !== 1 ? 's' : ''}</div>
+          </div>
+        </div>`;
+      }).join('')
+    : `<div style="padding:24px;text-align:center;color:var(--text2);font-size:13px">No playlists yet — create one below!</div>`;
+  document.getElementById('new-pl-input').value = '';
+  document.getElementById('pl-overlay').classList.remove('hidden');
+}
+
+function closePlModal(e) {
+  if (!e || e.target === document.getElementById('pl-overlay'))
+    document.getElementById('pl-overlay').classList.add('hidden');
+}
+
+function addToExisting(id) {
+  const pl = S.playlists.find(p => p.id === id);
+  if (!pl || !S.pendingPlVideo) return;
+  if (pl.videos.some(v => v.id === S.pendingPlVideo.id)) { toast('Already in playlist', ''); return; }
+  pl.videos.push(S.pendingPlVideo);
+  savePlaylists();
+  renderSidebarPlaylists();
+  closePlModal();
+  toast(`Added to "${pl.name}"`, 'ok');
+}
+
+function createAndAdd() {
+  const name = document.getElementById('new-pl-input').value.trim();
+  if (!name) return;
+  const pl = { id: uid(), name, videos: [], createdAt: Date.now() };
+  if (S.pendingPlVideo) pl.videos.push(S.pendingPlVideo);
+  S.playlists.push(pl);
+  savePlaylists();
+  renderSidebarPlaylists();
+  closePlModal();
+  toast(`"${name}" created!`, 'ok');
+}
+
+/* ─── Prompt new playlist (from sidebar button) ─── */
+function promptNewPlaylist() {
+  S.pendingPlVideo = null;
+  document.getElementById('pl-modal-body').innerHTML =
+    `<div style="padding:24px;text-align:center;color:var(--text2);font-size:13px">Enter a name for your new playlist below.</div>`;
+  document.getElementById('new-pl-input').value = '';
+  document.getElementById('pl-overlay').classList.remove('hidden');
+}
+
+/* =====================================================
+   KEYBOARD SHORTCUTS
+   ===================================================== */
+document.getElementById('search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleSearch();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeSettings(); closePlModal(); hideCtx(); }
+});
+
+/* =====================================================
+   SERVICE WORKER
+   ===================================================== */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW failed', e));
+}
+
+/* =====================================================
+   INIT
+   ===================================================== */
+function init() {
+  load();
+  applySettings();
+  renderSidebarPlaylists();
+  loadHome();
+}
+
+init();
+</script>
 </body>
 </html>
