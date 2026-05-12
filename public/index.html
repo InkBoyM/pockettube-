@@ -401,6 +401,64 @@
     }
     .ch-avatar-sm:hover { opacity: 0.75; }
 
+    /* ─── Cookie / Settings modal ─── */
+    .cookie-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: none; align-items: center; justify-content: center;
+      z-index: 700; padding: 20px;
+    }
+    .cookie-modal-overlay.open { display: flex; }
+    .cookie-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      width: 100%; max-width: 560px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+    .cookie-box h2 {
+      font-size: 1.6rem; letter-spacing: 1px; margin-bottom: 6px;
+    }
+    .cookie-box p { font-size: 13px; color: var(--text2); margin-bottom: 16px; line-height: 1.6; }
+    .cookie-box ol { font-size: 13px; color: var(--text2); padding-left: 18px; margin-bottom: 16px; line-height: 2; }
+    .cookie-box ol li span { color: var(--text); font-weight: 600; }
+    .cookie-textarea {
+      width: 100%; height: 120px;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text);
+      font-family: monospace; font-size: 12px;
+      padding: 10px; resize: vertical; outline: none;
+      transition: border-color var(--ease);
+    }
+    .cookie-textarea:focus { border-color: var(--accent); }
+    .cookie-actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: opacity var(--ease);
+    }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-secondary {
+      background: var(--bg3); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 14px; cursor: pointer;
+      transition: border-color var(--ease);
+    }
+    .btn-secondary:hover { border-color: var(--accent); }
+    .btn-danger {
+      background: none; color: #ff4444;
+      border: 1px solid #ff4444; border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 14px; cursor: pointer; margin-left: auto;
+    }
+    .cookie-status { font-size: 13px; margin-top: 10px; min-height: 20px; }
+    .cookie-status.ok { color: #4caf50; }
+    .cookie-status.err { color: var(--accent); }
+
     .card-text { flex: 1; min-width: 0; padding-right: 20px; }
 
     .card-title {
@@ -1081,6 +1139,7 @@
     </div>
   </div>
   <div class="header-actions">
+    <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
     <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
   </div>
 </header>
@@ -2087,14 +2146,105 @@ if ('serviceWorker' in navigator) {
 /* =====================================================
    INIT
    ===================================================== */
-function init() {
+async function init() {
   load();
   applySettings();
   renderSidebarPlaylists();
   loadHome();
+  await checkCookies();
 }
+
+// ── COOKIES & SETTINGS ──
+async function checkCookies() {
+  try {
+    const res = await fetch('/api/cookies/status');
+    const { configured } = await res.json();
+    if (!configured) {
+      document.getElementById('cookieSetupModal').classList.add('open');
+    }
+  } catch (e) {
+    console.warn('Cookie status check failed', e);
+  }
+}
+
+async function saveCookies(source) {
+  const inputId = source === 'setup' ? 'cookieSetupInput' : 'cookieSettingsInput';
+  const statusId = source === 'setup' ? 'cookieSetupStatus' : 'cookieSettingsStatus';
+  const cookies = document.getElementById(inputId).value.trim();
+  const status = document.getElementById(statusId);
+  if (!cookies) {
+    status.textContent = 'Please paste your cookies first.';
+    status.className = 'cookie-status err';
+    return;
+  }
+  status.textContent = 'Saving…';
+  status.className = 'cookie-status';
+  try {
+    const res = await fetch('/api/cookies', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cookies })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    status.textContent = '✓ Cookies saved! Videos should now play.';
+    status.className = 'cookie-status ok';
+    if (source === 'setup') {
+      setTimeout(() => document.getElementById('cookieSetupModal').classList.remove('open'), 1500);
+    }
+  } catch (err) {
+    status.textContent = '✗ Error: ' + err.message;
+    status.className = 'cookie-status err';
+  }
+}
+
+async function clearCookies() {
+  await fetch('/api/cookies', { method: 'DELETE' });
+  const status = document.getElementById('cookieSettingsStatus');
+  status.textContent = 'Cookies cleared.';
+  status.className = 'cookie-status ok';
+}
+
+function openSettings() { document.getElementById('settingsModal').classList.add('open'); }
+function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
+function closeCookieSetup() { document.getElementById('cookieSetupModal').classList.remove('open'); }
 
 init();
 </script>
+  <!-- Cookie setup modal -->
+  <div id="cookieSetupModal" class="cookie-modal-overlay">
+    <div class="cookie-box">
+      <h2>🍪 Setup Required</h2>
+      <p>To play videos, this app needs your YouTube cookies. This lets it stream videos as if it were you.</p>
+      <ol>
+        <li>Install <span>Cookie-Editor</span> extension (Chrome or Firefox)</li>
+        <li>Go to <span>youtube.com</span> while logged in</li>
+        <li>Click Cookie-Editor → <span>Export → Export as JSON</span></li>
+        <li>Paste the result below</li>
+      </ol>
+      <textarea id="cookieSetupInput" class="cookie-textarea" placeholder='[{"name":"VISITOR_INFO1_LIVE","value":"..."}]'></textarea>
+      <div class="cookie-actions">
+        <button class="btn-primary" onclick="saveCookies('setup')">Save & Continue</button>
+        <button class="btn-secondary" onclick="closeCookieSetup()">Skip for now</button>
+      </div>
+      <div id="cookieSetupStatus" class="cookie-status"></div>
+    </div>
+  </div>
+
+  <!-- Settings modal -->
+  <div id="settingsModal" class="cookie-modal-overlay">
+    <div class="cookie-box">
+      <h2>⚙️ Settings</h2>
+      <p>YouTube Cookies</p>
+      <p>Update your cookies if videos stop playing. Get them from Cookie-Editor on youtube.com.</p>
+      <textarea id="cookieSettingsInput" class="cookie-textarea" placeholder='Paste new cookies JSON here...'></textarea>
+      <div class="cookie-actions">
+        <button class="btn-primary" onclick="saveCookies('settings')">Update Cookies</button>
+        <button class="btn-secondary" onclick="closeSettings()">Close</button>
+        <button class="btn-danger" onclick="clearCookies()">Clear Cookies</button>
+      </div>
+      <div id="cookieSettingsStatus" class="cookie-status"></div>
+    </div>
+  </div>
 </body>
 </html>

@@ -4,8 +4,46 @@ import { Innertube, Platform } from 'youtubei.js';
 import vm from 'vm';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const COOKIES_FILE = path.join(__dirname, 'cookies.json');
+
+// Read cookies from file and parse for Innertube
+function loadCookiesString() {
+  try {
+    if (!fs.existsSync(COOKIES_FILE)) return null;
+    const raw = fs.readFileSync(COOKIES_FILE, 'utf-8');
+    const parsed = JSON.parse(raw);
+    // Accept both array format (Cookie-Editor) and plain string
+    if (Array.isArray(parsed)) {
+      return parsed.map(c => `${c.name}=${c.value}`).join('; ');
+    }
+    return String(parsed);
+  } catch { return null; }
+}
+
+// Apply cookies to existing Innertube session
+async function applyCookies(cookieStr) {
+  if (!cookieStr) return;
+  try {
+    await yt.session.http.setCookie(cookieStr);
+  } catch (e) {
+    console.log('setCookie not available, reinitializing with cookies...');
+    yt = await Innertube.create({
+      cache: false,
+      generate_session_locally: true,
+      retrieve_player: true,
+      cookie: cookieStr,
+      fetch: async (input, init) => {
+        const request = new Request(input, init);
+        return fetch(request);
+      }
+    });
+    console.log('Innertube reinitialized with cookies');
+  }
+}
+
 const fastify = Fastify({ logger: true });
 
 // Use Node's built-in vm module instead of new Function()
@@ -21,16 +59,18 @@ Platform.shim.eval = async (data, env) => {
 // Initialize Innertube once
 let yt;
 try {
+  const cookieStr = loadCookiesString();
   yt = await Innertube.create({
     cache: false,
     generate_session_locally: true,
     retrieve_player: true,
+    cookie: cookieStr || undefined,
     fetch: async (input, init) => {
       const request = new Request(input, init);
       return fetch(request);
     }
   });
-  console.log('Innertube initialized');
+  console.log('Innertube initialized', cookieStr ? '(with cookies)' : '(no cookies)');
 } catch (err) {
   console.error('Failed to initialize Innertube:', err);
   process.exit(1);
@@ -273,6 +313,48 @@ fastify.get('/api/trending', async (request, reply) => {
   } catch (error) {
     console.error('Trending error:', error);
     return [];
+  }
+});
+
+// GET /api/cookies/status — does a cookie file exist?
+fastify.get('/api/cookies/status', async (req, reply) => {
+  const exists = fs.existsSync(COOKIES_FILE);
+  return { configured: exists };
+});
+
+// POST /api/cookies — save cookies
+fastify.post('/api/cookies', async (request, reply) => {
+  const { cookies } = request.body;
+  if (!cookies) return reply.status(400).send({ error: 'No cookies provided' });
+  try {
+    // Validate it's parseable
+    let cookieStr;
+    try {
+      const parsed = JSON.parse(cookies);
+      if (Array.isArray(parsed)) {
+        cookieStr = parsed.map(c => `${c.name}=${c.value}`).join('; ');
+      } else {
+        cookieStr = cookies;
+      }
+    } catch {
+      // Not JSON, treat as plain cookie string
+      cookieStr = cookies;
+    }
+    fs.writeFileSync(COOKIES_FILE, JSON.stringify(cookies));
+    await applyCookies(cookieStr);
+    return { success: true };
+  } catch (err) {
+    return reply.status(500).send({ error: err.message });
+  }
+});
+
+// DELETE /api/cookies — clear cookies
+fastify.delete('/api/cookies', async (req, reply) => {
+  try {
+    if (fs.existsSync(COOKIES_FILE)) fs.unlinkSync(COOKIES_FILE);
+    return { success: true };
+  } catch (err) {
+    return reply.status(500).send({ error: err.message });
   }
 });
 
