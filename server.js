@@ -35,7 +35,6 @@ async function applyCookies(cookieStr) {
       generate_session_locally: true,
       retrieve_player: true,
       cookie: cookieStr,
-      client_type: 'ANDROID',
     });
     console.log('Innertube reinitialized with cookies');
   }
@@ -66,7 +65,6 @@ try {
     generate_session_locally: true,
     retrieve_player: true,
     cookie: cookieStr || undefined,
-    client_type: 'ANDROID',
   });
   console.log('Innertube initialized', cookieStr ? '(with cookies)' : '(no cookies)');
 } catch (err) {
