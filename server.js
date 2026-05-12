@@ -25,6 +25,10 @@ try {
     cache: false,
     generate_session_locally: true,
     retrieve_player: true,
+    fetch: async (input, init) => {
+      const request = new Request(input, init);
+      return fetch(request);
+    }
   });
   console.log('Innertube initialized');
 } catch (err) {
@@ -95,6 +99,8 @@ fastify.get('/api/stream/:id', async (request, reply) => {
 async function proxyStream(id, audioOnly, request, reply, prefetchedInfo = null) {
   try {
     const info = prefetchedInfo || await yt.getInfo(id);
+    console.log('Streaming data present:', !!info.streaming_data);
+    console.log('Formats count:', info.streaming_data?.formats?.length ?? 0);
     console.log('Got info, choosing format...');
     let format;
     try {
