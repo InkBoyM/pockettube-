@@ -35,6 +35,7 @@ async function applyCookies(cookieStr) {
       generate_session_locally: true,
       retrieve_player: true,
       cookie: cookieStr,
+      client_type: 'TV_EMBEDDED',
     });
     console.log('Innertube reinitialized with cookies');
   }
@@ -65,6 +66,7 @@ try {
     generate_session_locally: true,
     retrieve_player: true,
     cookie: cookieStr || undefined,
+    client_type: 'TV_EMBEDDED',
   });
   console.log('Innertube initialized', cookieStr ? '(with cookies)' : '(no cookies)');
 } catch (err) {
@@ -140,14 +142,19 @@ async function proxyStream(id, audioOnly, request, reply, prefetchedInfo = null)
     console.log('Got info, choosing format...');
     let format;
     try {
-      format = audioOnly
-        ? info.chooseFormat({ quality: 'best', type: 'audio' })
-        : info.chooseFormat({ quality: '360p', type: 'video+audio' });
-      console.log('Format chosen:', format?.mime_type);
+      format = info.chooseFormat({ 
+        quality: 'best',
+        type: 'video+audio',
+        format: 'mp4'
+      });
+      console.log('Format chosen:', format?.mime_type, 'URL length:', format?.url?.length);
     } catch (e) {
-      console.log('360p failed, trying any format...');
-      format = info.chooseFormat({ type: 'video+audio' });
-      console.log('Fallback format:', format?.mime_type);
+      console.log('Best failed, trying 360p...');
+      try {
+        format = info.chooseFormat({ quality: '360p', type: 'video+audio' });
+      } catch {
+        format = info.chooseFormat({ type: 'video+audio' });
+      }
     }
     const streamUrl = await format.decipher(yt.session.player);
 
