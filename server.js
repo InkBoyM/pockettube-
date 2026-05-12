@@ -95,15 +95,20 @@ fastify.get('/api/stream/:id', async (request, reply) => {
 async function proxyStream(id, audioOnly, request, reply, prefetchedInfo = null) {
   try {
     const info = prefetchedInfo || await yt.getInfo(id);
+    console.log('Got info, choosing format...');
     let format;
     try {
       format = audioOnly
         ? info.chooseFormat({ quality: 'best', type: 'audio' })
         : info.chooseFormat({ quality: '360p', type: 'video+audio' });
-    } catch {
+      console.log('Format chosen:', format?.mime_type);
+    } catch (e) {
+      console.log('360p failed, trying any format...');
       format = info.chooseFormat({ type: 'video+audio' });
+      console.log('Fallback format:', format?.mime_type);
     }
     const streamUrl = await format.decipher(yt.session.player);
+    console.log('Stream URL deciphered, length:', streamUrl?.length);
     const headers = {
       'User-Agent': 'com.google.android.youtube/17.31.35 (Linux; U; Android 11) gzip',
       'Accept': '*/*',
@@ -125,6 +130,7 @@ async function proxyStream(id, audioOnly, request, reply, prefetchedInfo = null)
     return reply.send(response.body);
   } catch (error) {
     fastify.log.error(`Proxy error for ${id}: ${error.message}`);
+    console.error('PROXY FULL ERROR:', error);
     if (!reply.sent) return reply.status(500).send({ error: error.message });
   }
 }
