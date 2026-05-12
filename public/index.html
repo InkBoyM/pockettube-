@@ -2233,17 +2233,77 @@ init();
 
   <!-- Settings modal -->
   <div id="settingsModal" class="cookie-modal-overlay">
-    <div class="cookie-box">
-      <h2>⚙️ Settings</h2>
-      <p>YouTube Cookies</p>
-      <p>Update your cookies if videos stop playing. Get them from Cookie-Editor on youtube.com.</p>
-      <textarea id="cookieSettingsInput" class="cookie-textarea" placeholder='Paste new cookies JSON here...'></textarea>
-      <div class="cookie-actions">
-        <button class="btn-primary" onclick="saveCookies('settings')">Update Cookies</button>
-        <button class="btn-secondary" onclick="closeSettings()">Close</button>
-        <button class="btn-danger" onclick="clearCookies()">Clear Cookies</button>
+    <div class="cookie-box" style="max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">⚙️ Settings</h2>
+        <button class="icon-btn" onclick="closeSettings()">✕</button>
       </div>
-      <div id="cookieSettingsStatus" class="cookie-status"></div>
+
+      <div class="sp-group" style="margin-bottom: 24px;">
+        <div class="sp-group-title" style="font-size: 11px; text-transform: uppercase; color: var(--text3); font-weight: 700; margin-bottom: 12px; letter-spacing: 0.5px;">Appearance</div>
+        <div class="sp-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div class="sp-label" style="display: flex; align-items: center; gap: 12px;">
+            <span class="sp-icon">☀️</span>
+            <div><div class="sp-name">Light Mode</div></div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="tog-light" onchange="setLightMode(this.checked)">
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="sp-group" style="margin-bottom: 24px;">
+        <div class="sp-group-title" style="font-size: 11px; text-transform: uppercase; color: var(--text3); font-weight: 700; margin-bottom: 12px; letter-spacing: 0.5px;">Playback</div>
+        <div class="sp-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div class="sp-label" style="display: flex; align-items: center; gap: 12px;">
+            <span class="sp-icon">🎵</span>
+            <div>
+              <div class="sp-name">Music Mode</div>
+              <div class="sp-desc" style="font-size: 11px; color: var(--text3);">Audio-only player</div>
+            </div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="tog-music" onchange="setMusicMode(this.checked)">
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="sp-group" style="margin-bottom: 24px;">
+        <div class="sp-group-title" style="font-size: 11px; text-transform: uppercase; color: var(--text3); font-weight: 700; margin-bottom: 12px; letter-spacing: 0.5px;">Downloads</div>
+        <div class="sp-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div class="sp-label" style="display: flex; align-items: center; gap: 12px;">
+            <span class="sp-icon">💾</span>
+            <div>
+              <div class="sp-name">Cache Download</div>
+              <div class="sp-desc" style="font-size: 11px; color: var(--text3);">Watch offline in browser</div>
+            </div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="tog-cache" onchange="setCacheDownload(this.checked)">
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+        <div style="font-size: 11px; color: var(--text3); margin-bottom: 8px;" id="cached-count-label"></div>
+        <button class="btn-secondary" style="width: 100%;" onclick="clearAllCache()">Clear All Cache</button>
+      </div>
+
+      <div class="sp-group" style="margin-bottom: 24px;">
+        <div class="sp-group-title" style="font-size: 11px; text-transform: uppercase; color: var(--text3); font-weight: 700; margin-bottom: 12px; letter-spacing: 0.5px;">YouTube Cookies</div>
+        <p style="font-size: 12px; color: var(--text3); margin-bottom: 12px;">Update your cookies if videos stop playing.</p>
+        <textarea id="cookieSettingsInput" class="cookie-textarea" style="height: 80px;" placeholder='Paste cookies JSON here...'></textarea>
+        <div class="cookie-actions" style="margin-top: 10px; display: flex; gap: 8px;">
+          <button class="btn-primary" onclick="saveCookies('settings')">Update</button>
+          <button class="btn-danger" style="margin-left: auto;" onclick="clearCookies()">Clear</button>
+        </div>
+        <div id="cookieSettingsStatus" class="cookie-status"></div>
+      </div>
+
+      <div class="sp-group">
+        <div class="sp-group-title" style="font-size: 11px; text-transform: uppercase; color: var(--text3); font-weight: 700; margin-bottom: 12px; letter-spacing: 0.5px;">App</div>
+        <button class="btn-secondary" id="install-btn" style="width: 100%;" onclick="installPWA()" disabled>Install App</button>
+      </div>
     </div>
   </div>
 </body>
