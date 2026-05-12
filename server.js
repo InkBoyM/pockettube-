@@ -35,10 +35,7 @@ async function applyCookies(cookieStr) {
       generate_session_locally: true,
       retrieve_player: true,
       cookie: cookieStr,
-      fetch: async (input, init) => {
-        const request = new Request(input, init);
-        return fetch(request);
-      }
+      client_type: 'ANDROID',
     });
     console.log('Innertube reinitialized with cookies');
   }
@@ -69,10 +66,7 @@ try {
     generate_session_locally: true,
     retrieve_player: true,
     cookie: cookieStr || undefined,
-    fetch: async (input, init) => {
-      const request = new Request(input, init);
-      return fetch(request);
-    }
+    client_type: 'ANDROID',
   });
   console.log('Innertube initialized', cookieStr ? '(with cookies)' : '(no cookies)');
 } catch (err) {
@@ -158,15 +152,25 @@ async function proxyStream(id, audioOnly, request, reply, prefetchedInfo = null)
       console.log('Fallback format:', format?.mime_type);
     }
     const streamUrl = await format.decipher(yt.session.player);
-    console.log('Stream URL deciphered, length:', streamUrl?.length);
+
+    // Append alr=yes to signal we accept redirects
+    const finalUrl = streamUrl.includes('?') 
+      ? streamUrl + '&alr=yes&cpn=1234567890abcdef' 
+      : streamUrl + '?alr=yes&cpn=1234567890abcdef';
+
     const headers = {
-      'User-Agent': 'com.google.android.youtube/17.31.35 (Linux; U; Android 11) gzip',
+      'User-Agent': 'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36',
       'Accept': '*/*',
+      'Accept-Language': 'en-US,en;q=0.9',
       'Origin': 'https://www.youtube.com',
-      'Referer': 'https://www.youtube.com/',
+      'Referer': 'https://www.youtube.com/watch?v=' + id,
+      'Sec-Fetch-Dest': 'video',
+      'Sec-Fetch-Mode': 'cors',
+      'Sec-Fetch-Site': 'cross-site',
     };
     if (request.headers['range']) headers['Range'] = request.headers['range'];
-    const response = await fetch(streamUrl, { headers });
+
+    const response = await fetch(finalUrl, { headers });
     if (!response.ok && response.status !== 206)
       return reply.status(502).send({ error: `YouTube returned ${response.status}` });
     reply.code(response.status);
