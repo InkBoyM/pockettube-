@@ -46,6 +46,10 @@ async function applyCookies(cookieStr) {
 
 const fastify = Fastify({ logger: true });
 
+fastify.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => {
+  try { done(null, JSON.parse(body)); } catch (e) { done(e); }
+});
+
 // Use Node's built-in vm module instead of new Function()
 Platform.shim.eval = async (data, env) => {
   const properties = [];
